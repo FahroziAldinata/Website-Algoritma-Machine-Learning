@@ -70,6 +70,6 @@ js/Shared/    → LCG random number generator
 
 ---
 
-## Mata Kuliah
+## Catatan
 
 Proyek ini masih beta sehingga masih banyak bug atau perbedaan
