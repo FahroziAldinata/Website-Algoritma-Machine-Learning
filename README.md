@@ -8,6 +8,22 @@ dari berbagai algoritma ML, lengkap dengan ekspor Excel berisi formula yang
 bisa diverifikasi.
 
 ---
+## Tampilan Website
+
+### Halaman Utama
+![Utama](images/screenshot.jpg)
+
+### Halaman Upload
+![Upload](images/Upload.jpg)
+
+### Halaman Hasil
+![Hasil](images/Result.jpg)
+
+### Halaman Exel
+![Excel](images/Sheet1.jpg)
+![Excel](images/Perhitungan.jpg)
+![Excel](images/Prediksi.jpg)
+![Excel](images/Evaluasi.jpg)
 
 ## Algoritma yang Tersedia
 
