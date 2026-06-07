@@ -1,0 +1,365 @@
+/* ============================================================
+   C4.5 DECISION TREE — c45.css
+   Tambahan khusus untuk Html/c45.html
+   Bergantung pada: css/style.css (harus di-load lebih dulu)
+   ============================================================ */
+
+/* ---- Tree Color Palette ---- */
+:root {
+  --tree-leaf-yes:   #34d399;
+  --tree-leaf-no:    #f87171;
+  --tree-node-bg:    #1e2c45;
+  --tree-edge:       #3d4561;
+  --tree-depth-0:    #4f9cf9;
+  --tree-depth-1:    #a78bfa;
+  --tree-depth-2:    #fbbf24;
+  --tree-depth-3:    #34d399;
+  --tree-depth-4:    #fb923c;
+}
+
+/* ============================================================
+   INIT METHOD RADIO (sama gaya dengan K-Means init-option)
+   ============================================================ */
+.init-radio {
+  display: flex; gap: 10px; flex-wrap: wrap; margin-top: 0.5rem;
+}
+.init-option {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 10px 14px; border-radius: var(--radius);
+  border: 1.5px solid var(--border2); background: var(--bg4);
+  cursor: pointer; transition: all 0.15s; flex: 1; min-width: 180px;
+}
+.init-option:hover { border-color: var(--accent); background: var(--bg3); }
+.init-option.selected { border-color: var(--accent); background: rgba(79,156,249,0.1); }
+.init-option input[type=radio] { display: none; }
+.init-dot {
+  width: 16px; height: 16px; border-radius: 50%;
+  border: 2px solid var(--border2); flex-shrink: 0; margin-top: 3px;
+  transition: all 0.15s;
+}
+.init-option.selected .init-dot { border-color: var(--accent); background: var(--accent); }
+.init-label { font-size: 20px; font-weight: 500; color: var(--text); }
+.init-desc  { font-size: 17px; color: var(--text3); margin-top: 2px; }
+
+/* ============================================================
+   ITERATION ACCORDION (Node expansion steps)
+   ============================================================ */
+.iter-block {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  margin-bottom: 0.65rem;
+  overflow: hidden;
+  animation: fadeIn 0.25s ease both;
+}
+.iter-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.85rem 1.25rem;
+  cursor: pointer;
+  background: var(--bg3);
+  user-select: none;
+  transition: background 0.15s;
+}
+.iter-header:hover { background: var(--bg4); }
+.iter-header.leaf-yes { border-left: 3px solid var(--tree-leaf-yes); }
+.iter-header.leaf-no  { border-left: 3px solid var(--tree-leaf-no); }
+.iter-header.split    { border-left: 3px solid var(--accent); }
+.iter-title {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 22px; font-weight: 500;
+}
+.iter-num {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--accent); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; font-weight: 700; flex-shrink: 0;
+}
+.iter-num.green  { background: var(--tree-leaf-yes); color: #0d2d22; }
+.iter-num.red    { background: var(--tree-leaf-no);  color: #2d0f0f; }
+.iter-num.purple { background: #a78bfa; color: #1a1030; }
+.iter-chevron {
+  font-size: 14px; color: var(--text3);
+  transition: transform 0.2s;
+}
+.iter-header.open .iter-chevron { transform: rotate(90deg); }
+.iter-body {
+  display: none; padding: 1.25rem;
+  background: var(--bg2);
+}
+.iter-body.open { display: block; }
+
+/* ============================================================
+   ENTROPY / GAIN TABLE
+   ============================================================ */
+.gain-table { font-size: 18px; }
+.gain-table th { font-size: 17px; }
+.gain-table td { font-size: 18px; font-family: var(--mono); }
+.gain-table td.best-gain {
+  color: var(--tree-leaf-yes); font-weight: 600;
+  background: rgba(52,211,153,0.08);
+}
+.gain-table td.gain-ratio-best {
+  color: var(--accent); font-weight: 600;
+  background: rgba(79,156,249,0.08);
+}
+
+/* ============================================================
+   FORMULA BLOCK — C4.5 flavour (kuning / entropy)
+   ============================================================ */
+.c45-formula-block {
+  background: #1a1800;
+  border: 1px solid rgba(251,191,36,0.2);
+  border-left: 3px solid var(--yellow);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: 0.75rem 1rem;
+  margin: 0.75rem 0 1.25rem;
+  font-family: var(--mono);
+  font-size: 18px;
+  line-height: 1.9;
+  color: #f0d080;
+}
+.c45-formula-block .formula-label {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 16px; font-weight: 600;
+  color: var(--yellow); letter-spacing: 0.08em;
+  text-transform: uppercase; margin-bottom: 0.4rem; opacity: 0.85;
+}
+.c45-formula-block .formula-label::before { content: '∑'; font-size: 18px; }
+.c45-formula-block .exc-formula  { color: #fcd34d; word-break: break-all; }
+.c45-formula-block .exc-comment  { color: #7a6030; font-size: 15px; font-style: italic; }
+
+/* ============================================================
+   TOGGLE FORMULA BUTTON
+   ============================================================ */
+.c45-toggle {
+  display: inline-flex; align-items: center; gap: 7px;
+  cursor: pointer; font-size: 17px; color: var(--yellow);
+  background: rgba(251,191,36,0.08); border: 1px solid rgba(251,191,36,0.22);
+  border-radius: var(--radius); padding: 4px 12px;
+  margin: 0.35rem 0 0; transition: background 0.15s;
+  font-family: var(--mono); user-select: none;
+}
+.c45-toggle:hover { background: rgba(251,191,36,0.15); }
+.c45-toggle .tog-icon { transition: transform 0.2s; font-size: 13px; }
+.c45-toggle.open .tog-icon { transform: rotate(90deg); }
+
+/* ============================================================
+   STEP DIVIDER
+   ============================================================ */
+.step-divider {
+  display: flex; align-items: center; gap: 10px;
+  margin: 1.25rem 0 0.75rem;
+}
+.step-divider::before, .step-divider::after {
+  content: ''; flex: 1; height: 1px; background: var(--border);
+}
+.step-divider span {
+  font-family: var(--mono); font-size: 16px;
+  color: var(--text3); white-space: nowrap;
+}
+
+/* ============================================================
+   DECISION TREE VISUAL
+   ============================================================ */
+.tree-canvas-wrap {
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--bg2);
+  padding: 1.5rem;
+  min-height: 300px;
+}
+
+/* SVG tree nodes */
+.tree-svg-node rect,
+.tree-svg-node circle { stroke-width: 1.5; }
+
+.tree-node-wrap {
+  display: inline-block;
+  text-align: center;
+  vertical-align: top;
+  padding: 0 12px;
+  position: relative;
+}
+
+/* Text-based tree rendering */
+.tree-text {
+  font-family: var(--mono);
+  font-size: 17px;
+  line-height: 1.85;
+  color: var(--text2);
+  white-space: pre;
+  overflow-x: auto;
+}
+.tree-text .t-split   { color: var(--accent); font-weight: 600; }
+.tree-text .t-branch  { color: var(--text3); }
+.tree-text .t-leaf-y  { color: var(--tree-leaf-yes); font-weight: 600; }
+.tree-text .t-leaf-n  { color: var(--tree-leaf-no);  font-weight: 600; }
+
+/* ============================================================
+   DEPTH BADGE (untuk node di pohon)
+   ============================================================ */
+.depth-badge {
+  display: inline-block; padding: 2px 8px; border-radius: 8px;
+  font-size: 15px; font-family: var(--mono); font-weight: 600;
+}
+.depth-0 { background: rgba(79,156,249,0.15);  color: var(--tree-depth-0); }
+.depth-1 { background: rgba(167,139,250,0.15); color: var(--tree-depth-1); }
+.depth-2 { background: rgba(251,191,36,0.15);  color: var(--tree-depth-2); }
+.depth-3 { background: rgba(52,211,153,0.15);  color: var(--tree-depth-3); }
+.depth-4 { background: rgba(251,146,60,0.15);  color: var(--tree-depth-4); }
+
+/* ============================================================
+   LEAF BADGE
+   ============================================================ */
+.leaf-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 3px 10px; border-radius: 12px;
+  font-family: var(--mono); font-size: 18px; font-weight: 600;
+  white-space: nowrap;
+}
+.leaf-badge.yes {
+  background: rgba(52,211,153,0.12);
+  color: var(--tree-leaf-yes);
+  border: 1px solid rgba(52,211,153,0.3);
+}
+.leaf-badge.no {
+  background: rgba(248,113,113,0.12);
+  color: var(--tree-leaf-no);
+  border: 1px solid rgba(248,113,113,0.3);
+}
+
+/* ============================================================
+   CONVERGENCE / RESULT BANNER
+   ============================================================ */
+.c45-result-banner {
+  background: rgba(79,156,249,0.08);
+  border: 1px solid rgba(79,156,249,0.3);
+  border-radius: var(--radius-lg);
+  padding: 1rem 1.25rem;
+  display: flex; align-items: center; gap: 12px;
+  margin: 1rem 0;
+}
+.c45-result-banner.success {
+  background: var(--green-bg);
+  border-color: rgba(52,211,153,0.35);
+}
+.result-banner-icon { font-size: 32px; }
+.result-banner-text { font-size: 20px; color: var(--green); font-weight: 500; }
+.result-banner-sub  { font-size: 17px; color: #5aab7a; }
+
+/* ============================================================
+   PRUNING CONFIG SLIDER
+   ============================================================ */
+.pruning-slider-wrap {
+  display: flex; align-items: center; gap: 12px;
+}
+.pruning-slider-wrap input[type=range] {
+  width: 220px; accent-color: var(--yellow); cursor: pointer; height: 6px;
+}
+.pruning-val {
+  font-family: var(--mono); font-size: 22px;
+  color: var(--yellow); font-weight: 600;
+}
+
+/* ============================================================
+   MISSING VALUE BADGE (reuse K-Means pattern)
+   ============================================================ */
+.mv-badge {
+  display: inline-block; padding: 2px 8px; border-radius: 8px;
+  font-size: 16px; font-family: var(--mono);
+  background: rgba(251,191,36,0.15); color: var(--yellow);
+  border: 1px solid rgba(251,191,36,0.3);
+}
+.mv-filled {
+  background: rgba(52,211,153,0.1); color: var(--tree-leaf-yes);
+  border: 1px solid rgba(52,211,153,0.3);
+}
+
+/* ============================================================
+   SCROLLABLE TABLE WRAPPER
+   ============================================================ */
+.tbl-scroll-both {
+  overflow: auto; max-height: 340px;
+  border: 1px solid var(--border); border-radius: var(--radius);
+}
+.tbl-scroll-both table thead th {
+  position: sticky; top: 0; z-index: 2; background: var(--bg);
+}
+
+/* ============================================================
+   CLASS SELECTOR RADIO PILLS
+   ============================================================ */
+.class-radio-group {
+  display: flex; gap: 8px; flex-wrap: wrap; margin-top: 0.5rem;
+}
+.class-radio-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 14px; border-radius: 20px;
+  border: 1.5px solid var(--border2); background: var(--bg4);
+  cursor: pointer; font-size: 18px; color: var(--text2);
+  user-select: none; transition: border-color 0.15s, background 0.15s, color 0.15s;
+  font-family: var(--mono);
+}
+.class-radio-btn:hover { border-color: var(--green); color: var(--text); }
+.class-radio-btn.active {
+  border-color: var(--green);
+  background: rgba(52,211,153,0.12);
+  color: var(--tree-leaf-yes);
+}
+.class-radio-btn input[type=radio] { display: none; }
+
+/* ============================================================
+   PAGE WRAPPER
+   ============================================================ */
+.page-wrapper { min-height: 60vh; }
+
+/* ============================================================
+   PREDICTION INPUT CARD
+   ============================================================ */
+.pred-input-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px; margin: 1rem 0;
+}
+.pred-input-card {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 0.85rem 1rem;
+}
+.pred-input-label {
+  font-size: 17px; color: var(--text3);
+  font-family: var(--mono); margin-bottom: 6px;
+}
+.pred-input-card select,
+.pred-input-card input[type=text] {
+  width: 100%;
+  background: var(--bg4); border: 1px solid var(--border2);
+  border-radius: var(--radius); color: var(--text);
+  font-family: var(--mono); font-size: 18px;
+  padding: 7px 10px; outline: none;
+  transition: border-color 0.15s;
+}
+.pred-input-card select:focus,
+.pred-input-card input[type=text]:focus { border-color: var(--accent); }
+
+/* ============================================================
+   CONFUSION MATRIX
+   ============================================================ */
+.conf-matrix-wrap {
+  display: inline-block; overflow-x: auto;
+}
+.conf-matrix td.tp { background: rgba(52,211,153,0.18); color: var(--tree-leaf-yes); font-weight: 700; }
+.conf-matrix td.fp { background: rgba(248,113,113,0.12); color: var(--tree-leaf-no); }
+.conf-matrix td.fn { background: rgba(251,191,36,0.12);  color: var(--yellow); }
+.conf-matrix td.tn { background: rgba(52,211,153,0.10);  color: var(--tree-leaf-yes); }
+
+/* ============================================================
+   COPY BUTTON (same as K-Means)
+   ============================================================ */
+.copy-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  cursor: pointer; font-size: 14px; font-family: var(--mono);
+  color: var(--text3); background: transparent; border: none;
+  padding: 2px 6px; border-radius: 4px;
+  transition: color 0.15s, background 0.15s;
+}
+.copy-btn:hover { color: var(--accent); background: rgba(79,156,249,0.1); }

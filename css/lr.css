@@ -1,0 +1,261 @@
+/* ============================================================
+   css/lr.css
+   Tambahan style untuk halaman Linear Regression
+   ============================================================ */
+
+/* ---- Mode Badge ---- */
+#mode-label {
+  font-size: 14px;
+  transition: background 0.2s, color 0.2s;
+}
+
+/* ---- Reg Hint ---- */
+#reg-hint {
+  display: none;
+  margin-top: 0.4rem;
+}
+
+/* ---- Feature Checkboxes Layout ---- */
+#feature-checkboxes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 0.5rem;
+}
+
+/* ---- Equation Display ---- */
+#equation-display .formula {
+  font-size: 18px !important;
+  letter-spacing: 0.02em;
+  color: #a8d8ff;
+  word-break: break-word;
+}
+
+/* ---- Scatter Plot ---- */
+#scatter-plot svg {
+  display: block;
+  border-radius: 8px;
+}
+
+/* ---- Prediction Input Grid ---- */
+.pred-input-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+  margin: 0.75rem 0;
+}
+.pred-input-item label {
+  display: block;
+  font-size: 13px;
+  color: var(--text2);
+  font-family: var(--mono);
+  margin-bottom: 3px;
+}
+.pred-input-item input[type=number] {
+  width: 100%;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 15px;
+  padding: 7px 10px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.pred-input-item input[type=number]:focus {
+  border-color: var(--accent);
+}
+
+/* ---- Manual Input Table ---- */
+#manual-table-wrap {
+  overflow-x: auto;
+  max-height: 340px;
+  overflow-y: auto;
+}
+#manual-table-wrap table input[type=number] {
+  width: 90px;
+  background: var(--bg4);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 13px;
+  padding: 4px 6px;
+  outline: none;
+}
+#manual-table-wrap table input[type=number]:focus {
+  border-color: var(--accent);
+  background: var(--bg3);
+}
+
+/* ---- Lambda Input ---- */
+#lambda-wrap {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  margin-top: 0.5rem;
+}
+#lambda-wrap.show { display: flex; }
+#lambda-wrap label {
+  font-size: 13px;
+  color: var(--text2);
+  font-family: var(--mono);
+}
+#lambda-wrap input[type=number] {
+  width: 90px;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 14px;
+  padding: 5px 8px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+#lambda-wrap input[type=number]:focus { border-color: var(--accent); }
+
+/* ---- Split Config ---- */
+.split-config {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: 0.5rem;
+}
+.split-config label {
+  font-size: 13px;
+  color: var(--text2);
+  font-family: var(--mono);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.split-config input[type=number] {
+  width: 72px;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 14px;
+  padding: 5px 8px;
+  outline: none;
+}
+.split-config input[type=number]:focus { border-color: var(--accent); }
+
+/* ---- Radio Group ---- */
+.radio-group {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 0.4rem;
+}
+.radio-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--text2);
+  padding: 5px 12px;
+  border-radius: 20px;
+  border: 1.5px solid var(--border2);
+  background: var(--bg4);
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+  user-select: none;
+}
+.radio-label:hover { border-color: var(--accent); color: var(--text); }
+.radio-label input[type=radio] { display: none; }
+.radio-label.selected {
+  border-color: var(--accent);
+  background: rgba(79,156,249,0.12);
+  color: var(--text);
+}
+
+/* ---- Result Banner ---- */
+.pred-result-banner {
+  background: rgba(79,156,249,0.1);
+  border: 1px solid rgba(79,156,249,0.35);
+  border-radius: var(--radius-lg);
+  padding: 1rem 1.25rem;
+  margin-top: 0.75rem;
+  font-family: var(--mono);
+}
+.pred-result-banner .pred-val {
+  font-size: 32px;
+  font-weight: 600;
+  color: var(--accent);
+}
+.pred-result-banner .pred-desc {
+  font-size: 13px;
+  color: var(--text2);
+  margin-top: 2px;
+}
+
+/* ---- Tab Navigation (Train / Test) ---- */
+.tab-bar {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 0.75rem;
+}
+.tab-btn {
+  padding: 5px 14px;
+  border-radius: 6px 6px 0 0;
+  border: 1px solid var(--border);
+  background: var(--bg3);
+  color: var(--text2);
+  font-family: var(--mono);
+  font-size: 13px;
+  cursor: pointer;
+  border-bottom: none;
+  transition: background 0.15s, color 0.15s;
+}
+.tab-btn.active {
+  background: var(--bg2);
+  color: var(--text);
+  border-color: var(--accent2);
+}
+.tab-pane { display: none; }
+.tab-pane.active { display: block; }
+
+/* ---- FIX #1: Formula Excel yang bisa disalin ---- */
+.exc-section-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+  font-family: var(--mono);
+  margin-bottom: 4px;
+  letter-spacing: 0.03em;
+}
+
+.exc-copyable {
+  cursor: pointer;
+  border: 1px solid var(--border2);
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text);
+  background: var(--bg4);
+  transition: background 0.15s, border-color 0.15s;
+  display: inline-block;
+  user-select: all;
+  word-break: break-all;
+}
+.exc-copyable:hover {
+  background: rgba(79,156,249,0.12);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ---- FIX #4: Scatter plot container center ---- */
+#r-scatter-plot {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+#r-scatter-plot > div {
+  width: 100%;
+}

@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Apriori — ML Manual Calculator</title>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/x-icon" href="../Assets/Image/Logo.ico">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/apriori.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+
+<!-- ===================== NAVIGATION ===================== -->
+<nav class="nav">
+  <div class="nav-brand" onclick="window.location.href='../index.html'" style="cursor:pointer">
+    <div class="dot"></div>
+    ML Manual Calculator
+  </div>
+  <div class="breadcrumb" id="breadcrumb">
+    <a class="crumb" href="../index.html">Beranda</a>
+    <span class="sep">/</span>
+    <span class="active-crumb">Apriori</span>
+  </div>
+</nav>
+
+<!-- ============================================================ PAGE: INPUT ============================================================ -->
+<div id="page-input" class="page-wrapper">
+  <div class="container">
+    <h2 class="page-title">Apriori <strong>Algorithm</strong></h2>
+    <p class="page-subtitle">Upload CSV → Preview → Konfigurasi → Lihat frequent itemsets + association rules + formula Excel</p>
+
+    <!-- STEP 1: Upload -->
+    <div class="section">
+      <div class="section-head">
+        <div class="step-circle">1</div>
+        <div class="section-title">Upload Dataset Transaksi CSV</div>
+      </div>
+      <div class="section-body">
+        <div class="upload-zone" id="drop-zone" onclick="document.getElementById('csv-input').click()">
+          <span class="up-icon">&#8686;</span>
+          <div class="up-title">Klik untuk pilih file .csv</div>
+          <div class="up-sub">atau drag &amp; drop file ke sini</div>
+        </div>
+        <input type="file" id="csv-input" accept=".csv" style="display:none">
+
+        <div style="margin-top:1rem;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span style="font-size:20px;color:var(--text3)">Tidak punya dataset?</span>
+          <button class="btn btn-sm" onclick="loadSample('supermarket')">&#9654; Dataset Supermarket (10 transaksi)</button>
+          <button class="btn btn-sm" onclick="loadSample('toko')">&#9654; Dataset Toko Kelontong (15 transaksi)</button>
+        </div>
+
+        <div class="info-box" style="margin-top:1rem;margin-bottom:0">
+          <strong>Format CSV:</strong> Baris pertama = header.
+          Kolom pertama bisa berisi TID/No/ID (opsional).
+          Setiap kolom berikutnya = 1 item per kolom (satu baris = satu transaksi).
+          Item kosong diabaikan otomatis.
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 2: Preview -->
+    <div class="section" id="preview-section" style="display:none">
+      <div class="section-head">
+        <div class="step-circle">2</div>
+        <div class="section-title">Preview Dataset</div>
+      </div>
+      <div class="section-body">
+        <div id="preview-info"></div>
+        <div class="tbl-wrap-scroll" style="max-height:260px">
+          <table id="preview-table"></table>
+        </div>
+
+        <!-- Unique items display — scrollable -->
+        <div style="margin-top:1rem">
+          <div style="font-size:18px;color:var(--text2);margin-bottom:6px;font-family:var(--mono)">ITEM UNIK DITEMUKAN:</div>
+          <div class="tbl-wrap-scroll" style="max-height:120px">
+            <div id="items-display" style="display:flex;flex-wrap:wrap;gap:6px;padding:4px 2px"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 3: Config -->
+    <div class="section" id="config-section" style="display:none">
+      <div class="section-head">
+        <div class="step-circle">3</div>
+        <div class="section-title">Konfigurasi Parameter Apriori</div>
+      </div>
+      <div class="section-body">
+
+        <!-- Min Support -->
+        <div class="param-block">
+          <div class="param-label-row">
+            <div style="display:flex;align-items:center;gap:8px">
+              <div class="param-badge">S</div>
+              <span style="font-size:20px;font-weight:500">Minimum Support</span>
+            </div>
+            <span id="support-display" style="font-family:var(--mono);font-size:28px;color:var(--accent);font-weight:600">10%</span>
+          </div>
+          <!-- Visual bar -->
+          <div style="height:8px;border-radius:4px;background:var(--bg4);margin:0.6rem 0;overflow:hidden">
+            <div id="support-bar-fill" style="height:100%;width:10%;background:var(--accent);border-radius:4px;transition:width .15s ease"></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px">
+            <span style="font-size:13px;color:var(--text3)">1%</span>
+            <input type="range" id="support-slider" min="0.01" max="1.0" step="0.01" value="0.10"
+              oninput="updateSupportSlider(this.value)"
+              style="flex:1;accent-color:var(--accent);cursor:pointer;height:6px">
+            <span style="font-size:13px;color:var(--text3)">100%</span>
+          </div>
+          <div class="info-box" style="margin-top:0.75rem;margin-bottom:0;font-size:17px">
+            Item/itemset harus muncul di minimal <strong id="support-count-hint">...</strong> transaksi untuk dianggap frequent.
+          </div>
+        </div>
+
+        <!-- Min Confidence -->
+        <div class="param-block" style="margin-top:1rem">
+          <div class="param-label-row">
+            <div style="display:flex;align-items:center;gap:8px">
+              <div class="param-badge" style="background:var(--green)">C</div>
+              <span style="font-size:20px;font-weight:500">Minimum Confidence</span>
+            </div>
+            <span id="conf-display" style="font-family:var(--mono);font-size:28px;color:var(--green);font-weight:600">60%</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;margin-top:0.6rem">
+            <span style="font-size:13px;color:var(--text3)">1%</span>
+            <input type="range" id="conf-slider" min="0.01" max="1.0" step="0.01" value="0.60"
+              oninput="updateConfSlider(this.value)"
+              style="flex:1;accent-color:var(--green);cursor:pointer;height:6px">
+            <span style="font-size:13px;color:var(--text3)">100%</span>
+          </div>
+          <div class="info-box" style="margin-top:0.75rem;margin-bottom:0;font-size:17px;border-color:rgba(52,211,153,0.3);background:rgba(52,211,153,0.06);color:#7de8aa">
+            Rule X→Y valid jika <strong>conf(X→Y) = supp(X∪Y) / supp(X) ≥ <span id="conf-hint">60%</span></strong>
+          </div>
+        </div>
+
+        <!-- Max Itemset Size -->
+        <div class="param-block" style="margin-top:1rem">
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+            <div class="param-badge" style="background:var(--yellow)">K</div>
+            <span style="font-size:20px;font-weight:500">Maksimal Panjang Itemset (K)</span>
+            <select id="max-itemset-select" onchange="updateMaxItemset(this.value)"
+              style="margin-left:auto">
+              <option value="2">K = 2 items</option>
+              <option value="3" selected>K = 3 items</option>
+              <option value="4">K = 4 items</option>
+              <option value="5">K = 5 items</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- LCG Seed (advanced) -->
+        <div style="margin-top:0.75rem;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <span style="font-size:18px;color:var(--text3);font-family:var(--mono)">LCG Seed:</span>
+          <input type="number" id="lcg-seed-input" value="42" min="0"
+            oninput="updateLCGSeed(this.value)"
+            style="width:90px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius);
+                   color:var(--text);font-family:var(--mono);font-size:18px;padding:5px 8px">
+          <span style="font-size:16px;color:var(--text3)">X<sub>n+1</sub> = (1664525 × X<sub>n</sub> + 1013904223) mod 2³²</span>
+        </div>
+
+        <div style="margin-top:1.5rem;display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn btn-primary" onclick="processApriori()">&#9654; Proses Apriori</button>
+          <button class="btn btn-sm" onclick="resetInput()">&#8635; Reset</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ============================================================ PAGE: RESULT ============================================================ -->
+<div id="page-result" style="display:none">
+  <div class="container">
+    <div id="result-content"></div>
+  </div>
+</div>
+
+<script src="../js/Shared/lcg.js"></script>
+<script src="../js/Apriori/apriori_utils.js"></script>
+<script src="../js/Apriori/apriori_io.js"></script>
+<script src="../js/Apriori/apriori_core.js"></script>
+<script src="../js/Apriori/apriori_render.js"></script>
+<script src="../js/Apriori/apriori_export.js"></script>
+
+</body>
+</html>

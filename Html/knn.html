@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>K-NN — ML Manual Calculator</title>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/x-icon" href="../Assets/Image/Logo.ico">
+  <link rel="stylesheet" href="../css/style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    /* === KNN-specific additions === */
+    input[type=range] {
+      flex: 1;
+      accent-color: var(--accent);
+      cursor: pointer;
+      height: 6px;
+    }
+    .knn-config-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    .config-block {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 0.9rem 1.1rem;
+    }
+    .config-block label {
+      font-size: 13px;
+      color: var(--text2);
+      display: block;
+      margin-bottom: 0.35rem;
+      font-family: var(--mono);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .config-hint {
+      font-size: 12px;
+      color: var(--text3);
+      margin-top: 0.4rem;
+      line-height: 1.5;
+    }
+    .radio-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 0.35rem;
+    }
+    .radio-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 12px;
+      border-radius: 20px;
+      border: 1.5px solid var(--border2);
+      background: var(--bg4);
+      cursor: pointer;
+      font-size: 13px;
+      color: var(--text2);
+      transition: border-color 0.15s, background 0.15s, color 0.15s;
+      user-select: none;
+    }
+    .radio-pill input[type=radio] { display: none; }
+    .radio-pill:has(input:checked) {
+      border-color: var(--accent);
+      background: rgba(79,156,249,0.12);
+      color: var(--text);
+    }
+    #minkowski-p-row { display: none; }
+    #k-value-display {
+      font-family: var(--mono);
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--accent);
+      min-width: 24px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ===================== NAVIGATION ===================== -->
+<nav class="nav">
+  <div class="nav-brand" onclick="window.location.href='../index.html'" style="cursor:pointer">
+    <div class="dot"></div>
+    ML Manual Calculator
+  </div>
+  <div class="breadcrumb">
+    <a class="crumb" href="../index.html">Beranda</a>
+    <span class="sep">/</span>
+    <span class="active-crumb">K-Nearest Neighbors</span>
+  </div>
+</nav>
+
+<!-- ============================================================ PAGE: INPUT ============================================================ -->
+<div id="page-input" class="page-wrapper">
+  <div class="container">
+    <h2 class="page-title">K-Nearest <strong>Neighbors</strong></h2>
+    <p class="page-subtitle">Upload CSV → Konfigurasi K, Jarak, Normalisasi → Proses → Lihat perhitungan manual + Export Excel</p>
+
+    <!-- ===== STEP 1: UPLOAD ===== -->
+    <div class="section">
+      <div class="section-head">
+        <div class="step-circle">1</div>
+        <div class="section-title">Upload Dataset CSV</div>
+      </div>
+      <div class="section-body">
+        <div class="upload-zone" id="drop-zone" onclick="document.getElementById('csv-input').click()">
+          <span class="up-icon">&#8686;</span>
+          <div class="up-title">Klik untuk pilih file .csv</div>
+          <div class="up-sub">atau drag &amp; drop file ke sini</div>
+        </div>
+        <input type="file" id="csv-input" accept=".csv" style="display:none">
+
+        <div style="margin-top:1rem;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span style="font-size:13px;color:var(--text3)">Dataset contoh:</span>
+          <button class="btn btn-sm" onclick="loadSample('iris')">&#9654; Iris (150 baris)</button>
+          <button class="btn btn-sm" onclick="loadSample('buah')">&#9654; Buah (12 baris)</button>
+        </div>
+
+        <div class="info-box" style="margin-top:1rem;margin-bottom:0">
+          <strong>Format CSV:</strong> Baris pertama = header. Kolom terakhir otomatis dijadikan label kelas.
+          Semua fitur bisa numerik atau kategoris (fitur kategoris <em>tidak digunakan dalam perhitungan jarak</em>, hanya ditampilkan).
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== STEP 2: PREVIEW ===== -->
+    <div class="section" id="preview-section" style="display:none">
+      <div class="section-head">
+        <div class="step-circle">2</div>
+        <div class="section-title">Preview &amp; Kolom Fitur</div>
+      </div>
+      <div class="section-body">
+        <div id="preview-info" style="margin-bottom:0.75rem"></div>
+        <div class="tbl-wrap-scroll" style="max-height:240px">
+          <table id="preview-table"></table>
+        </div>
+        <hr class="divider" style="margin:1rem 0">
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:1rem">
+          <label for="class-col-select" style="font-size:13px;color:var(--text2)">Kolom label/kelas:</label>
+          <select id="class-col-select" onchange="renderColSelector()"></select>
+        </div>
+        <div id="preview-warn"></div>
+
+        <!-- Pemilihan kolom fitur -->
+        <div id="col-selector-section" style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1rem 1.25rem;">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:0.75rem">
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="width:22px;height:22px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0">F</div>
+              <span style="font-size:14px;font-weight:500;color:var(--text)">Pilih Kolom Fitur</span>
+            </div>
+            <div style="display:flex;gap:6px">
+              <button class="btn btn-sm" onclick="setAllCols(true)">&#10003; Pilih Semua</button>
+              <button class="btn btn-sm" onclick="setAllCols(false)">&#10005; Hapus Semua</button>
+            </div>
+          </div>
+          <div class="info-box" style="margin-bottom:0.85rem;font-size:12px">
+            <strong>Tips:</strong> Hilangkan centang kolom non-relevan (No, ID, Nama).
+            KNN hanya menggunakan fitur <strong>numerik</strong> untuk perhitungan jarak.
+            Kolom label/kelas (<span id="class-col-label-hint" style="color:var(--accent);font-family:var(--mono)"></span>) otomatis sebagai target.
+          </div>
+          <div id="col-checkboxes" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+          <div id="col-selector-warn" style="margin-top:0.65rem"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== STEP 3: KONFIGURASI KNN ===== -->
+    <div class="section" id="config-section" style="display:none">
+      <div class="section-head">
+        <div class="step-circle">3</div>
+        <div class="section-title">Konfigurasi K-NN</div>
+      </div>
+      <div class="section-body">
+        <div class="knn-config-grid">
+
+          <!-- K Value -->
+          <div class="config-block">
+            <label>Jumlah Tetangga (K)</label>
+            <div style="display:flex;align-items:center;gap:12px;margin-top:0.4rem">
+              <input type="range" id="k-value" min="1" max="20" value="3"
+                oninput="document.getElementById('k-value-display').textContent=this.value"
+                style="flex:1;accent-color:var(--accent)">
+              <span id="k-value-display">3</span>
+            </div>
+            <div class="config-hint">Gunakan K ganjil untuk menghindari seri. K=3 cocok untuk sebagian besar kasus kecil.</div>
+          </div>
+
+          <!-- Metrik Jarak -->
+          <div class="config-block">
+            <label>Metrik Jarak</label>
+            <select id="distance-metric" onchange="onMetricChange()" style="width:100%;margin-top:0.35rem">
+              <option value="euclidean">Euclidean — √Σ(x−y)²</option>
+              <option value="manhattan">Manhattan — Σ|x−y|</option>
+              <option value="minkowski">Minkowski — (Σ|x−y|ᵖ)^(1/p)</option>
+            </select>
+            <div id="minkowski-p-row" style="margin-top:0.6rem;display:flex;align-items:center;gap:8px">
+              <span style="font-size:13px;color:var(--text2)">p =</span>
+              <input type="number" id="minkowski-p" min="1" max="10" value="3" step="0.5"
+                style="width:70px;background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius);color:var(--text);font-family:var(--mono);font-size:13px;padding:5px 8px">
+            </div>
+            <div class="config-hint">Euclidean (p=2) paling umum. Manhattan lebih tahan terhadap outlier.</div>
+          </div>
+
+          <!-- Weighting -->
+          <div class="config-block">
+            <label>Voting Weighting</label>
+            <div class="radio-row">
+              <label class="radio-pill">
+                <input type="radio" name="weighting" value="uniform" checked>
+                &#9632; Uniform
+              </label>
+              <label class="radio-pill">
+                <input type="radio" name="weighting" value="distance">
+                &#9670; Distance-Weighted (1/d)
+              </label>
+            </div>
+            <div class="config-hint">Uniform: setiap tetangga punya suara sama. Distance-based: tetangga lebih dekat punya bobot lebih besar.</div>
+          </div>
+
+          <!-- Normalisasi -->
+          <div class="config-block">
+            <label>Normalisasi Fitur</label>
+            <div class="radio-row">
+              <label class="radio-pill">
+                <input type="radio" name="norm" value="none">
+                Tanpa
+              </label>
+              <label class="radio-pill">
+                <input type="radio" name="norm" value="minmax" checked>
+                Min-Max (0–1)
+              </label>
+              <label class="radio-pill">
+                <input type="radio" name="norm" value="standard">
+                Z-Score
+              </label>
+            </div>
+            <div class="config-hint">Sangat disarankan jika fitur memiliki skala berbeda (misal: berat vs persentase).</div>
+          </div>
+
+        </div><!-- /.knn-config-grid -->
+
+        <!-- Split Section -->
+        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1rem 1.25rem;margin-bottom:1rem">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:0.85rem">
+            <div style="width:22px;height:22px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0">S</div>
+            <span style="font-size:14px;font-weight:500;color:var(--text)">Rasio Split Train / Test</span>
+          </div>
+
+          <div style="display:flex;border-radius:6px;overflow:hidden;height:28px;margin-bottom:0.85rem;font-size:13px;font-weight:600">
+            <div id="split-bar-train" style="background:var(--accent);display:flex;align-items:center;justify-content:center;color:#fff;transition:width .15s ease;width:80%">
+              Training <span id="split-label-train-bar" style="margin-left:4px">80%</span>
+            </div>
+            <div id="split-bar-test" style="background:var(--bg2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--text2);transition:width .15s ease;width:20%">
+              Test <span id="split-label-test-bar" style="margin-left:4px">20%</span>
+            </div>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:12px">
+            <span style="font-size:13px;color:var(--text3);white-space:nowrap">60%</span>
+            <input type="range" id="split-slider" min="60" max="90" step="5" value="80"
+              oninput="updateSplitSlider(this.value)" style="flex:1;accent-color:var(--accent);height:6px">
+            <span style="font-size:13px;color:var(--text3);white-space:nowrap">90%</span>
+          </div>
+
+          <div style="display:flex;justify-content:space-between;margin-top:0.6rem;flex-wrap:wrap;gap:6px">
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="width:10px;height:10px;border-radius:2px;background:var(--accent);display:inline-block"></span>
+              <span style="font-size:12px;color:var(--text2)">Training: <strong id="split-label-train" style="color:var(--accent)">80%</strong></span>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="width:10px;height:10px;border-radius:2px;background:var(--bg2);border:1px solid var(--border);display:inline-block"></span>
+              <span style="font-size:12px;color:var(--text2)">Testing: <strong id="split-label-test" style="color:var(--text)">20%</strong></span>
+            </div>
+            <div style="font-size:12px;color:var(--text3)" id="split-est-rows"></div>
+          </div>
+
+          <div class="info-box" style="margin-top:0.75rem;margin-bottom:0;font-size:12px">
+            <strong>Stratified Split:</strong> Proporsi kelas dijaga di training & test.
+            n_test = MAX(1, ROUND(n_class × test_ratio, 0)) per kelas. LCG Seed = 42.
+          </div>
+        </div>
+
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn btn-primary" onclick="processKNN()">&#9654; Proses K-NN</button>
+          <button class="btn btn-sm" onclick="resetInput()">&#8635; Reset</button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /.container -->
+</div><!-- /#page-input -->
+
+<!-- ============================================================ PAGE: RESULT ============================================================ -->
+<div id="page-result" style="display:none">
+  <div class="container">
+    <div id="result-content"></div>
+  </div>
+</div>
+
+<!-- ============================================================ SCRIPTS ============================================================ -->
+<script src="../js/Shared/lcg.js"></script>
+<script src="../js/KNN/knn_utils.js"></script>
+<script src="../js/KNN/knn_io.js"></script>
+<script src="../js/KNN/knn_core.js"></script>
+<script src="../js/KNN/knn_render.js"></script>
+<script src="../js/KNN/knn_export.js"></script>
+<script>
+  function onMetricChange() {
+    const v = document.getElementById('distance-metric').value;
+    document.getElementById('minkowski-p-row').style.display = v === 'minkowski' ? 'flex' : 'none';
+  }
+
+  // Show config section when preview is shown
+  const origRenderPreview = renderPreview;
+  renderPreview = function() {
+    origRenderPreview();
+    document.getElementById('config-section').style.display = '';
+  };
+</script>
+</body>
+</html>

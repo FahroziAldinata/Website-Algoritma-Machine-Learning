@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>K-Means Clustering — ML Manual Calculator</title>
+  <link rel="icon" type="image/x-icon" href="../Assets/Image/Logo.ico">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+  <style>
+    /* ============================================================
+       K-MEANS SPECIFIC STYLES
+       ============================================================ */
+
+    /* ---- Cluster Color Swatches ---- */
+    .cluster-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 3px 10px; border-radius: 12px;
+      font-family: var(--mono); font-size: 18px; font-weight: 600;
+      white-space: nowrap;
+    }
+    .cluster-dot {
+      width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+    }
+
+    /* ---- Iteration Accordion ---- */
+    .iter-block {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      margin-bottom: 0.65rem;
+      overflow: hidden;
+      animation: fadeIn 0.25s ease both;
+    }
+    .iter-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.85rem 1.25rem;
+      cursor: pointer;
+      background: var(--bg3);
+      user-select: none;
+      transition: background 0.15s;
+    }
+    .iter-header:hover { background: var(--bg4); }
+    .iter-header.converged { border-left: 3px solid var(--green); }
+    .iter-header.active    { border-left: 3px solid var(--accent); }
+    .iter-title {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 22px; font-weight: 500;
+    }
+    .iter-num {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: var(--accent); color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; font-weight: 700; flex-shrink: 0;
+    }
+    .iter-num.green { background: var(--green); color: #0d2d22; }
+    .iter-chevron {
+      font-size: 14px; color: var(--text3);
+      transition: transform 0.2s;
+    }
+    .iter-header.open .iter-chevron { transform: rotate(90deg); }
+    .iter-body {
+      display: none; padding: 1.25rem;
+      background: var(--bg2);
+    }
+    .iter-body.open { display: block; }
+
+    /* ---- Distance Matrix Mini Table ---- */
+    .dist-matrix { font-size: 18px; }
+    .dist-matrix th { font-size: 17px; }
+    .dist-matrix td { font-size: 18px; font-family: var(--mono); }
+    .dist-matrix td.min-dist {
+      color: var(--accent); font-weight: 600;
+      background: rgba(79,156,249,0.08);
+    }
+
+    /* ---- Centroid Change Arrow ---- */
+    .centroid-arrow {
+      display: flex; align-items: center; gap: 8px;
+      font-family: var(--mono); font-size: 18px;
+      margin: 4px 0;
+    }
+    .centroid-arrow .old { color: var(--text3); }
+    .centroid-arrow .arr { color: var(--accent); }
+    .centroid-arrow .new { color: var(--green); font-weight: 600; }
+
+    /* ---- Excel block (K-Means flavour) ---- */
+    .km-excel-block {
+      background: #0d1825;
+      border: 1px solid rgba(79,156,249,0.2);
+      border-left: 3px solid var(--accent);
+      border-radius: 0 var(--radius) var(--radius) 0;
+      padding: 0.75rem 1rem;
+      margin: 0.75rem 0 1.25rem;
+      font-family: var(--mono);
+      font-size: 18px;
+      line-height: 1.9;
+      color: #a8c8ff;
+    }
+    .km-excel-block .excel-label {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 16px; font-weight: 600;
+      color: var(--accent); letter-spacing: 0.08em;
+      text-transform: uppercase; margin-bottom: 0.4rem; opacity: 0.85;
+    }
+    .km-excel-block .excel-label::before { content: '⊞'; font-size: 18px; }
+    .km-excel-block .exc-formula { color: #5dafe0; word-break: break-all; }
+    .km-excel-block .exc-comment { color: #3a5a7a; font-size: 15px; font-style: italic; }
+
+    /* ---- Missing Value Badge ---- */
+    .mv-badge {
+      display: inline-block; padding: 2px 8px; border-radius: 8px;
+      font-size: 16px; font-family: var(--mono);
+      background: rgba(251,191,36,0.15); color: var(--yellow);
+      border: 1px solid rgba(251,191,36,0.3);
+    }
+    .mv-filled {
+      background: rgba(52,211,153,0.1); color: var(--green);
+      border: 1px solid rgba(52,211,153,0.3);
+    }
+
+    /* ---- Convergence Banner ---- */
+    .converge-banner {
+      background: var(--green-bg);
+      border: 1px solid rgba(52,211,153,0.35);
+      border-radius: var(--radius-lg);
+      padding: 1rem 1.25rem;
+      display: flex; align-items: center; gap: 12px;
+      margin: 1rem 0;
+    }
+    .converge-icon { font-size: 32px; }
+    .converge-text { font-size: 20px; color: var(--green); font-weight: 500; }
+    .converge-sub  { font-size: 17px; color: #5aab7a; }
+
+    /* ---- Result Cluster Table ---- */
+    .result-table td.cluster-cell { font-weight: 600; font-family: var(--mono); }
+
+    /* ---- K Selector ---- */
+    .k-selector {
+      display: flex; gap: 8px; flex-wrap: wrap; margin-top: 0.5rem;
+    }
+    .k-btn {
+      width: 44px; height: 44px; border-radius: 50%;
+      border: 1.5px solid var(--border2);
+      background: var(--bg4); color: var(--text2);
+      font-size: 20px; font-weight: 600; font-family: var(--mono);
+      cursor: pointer; transition: all 0.15s;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .k-btn:hover  { border-color: var(--accent); color: var(--text); background: var(--bg3); }
+    .k-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+    /* ---- Inertia / SSE chart bar ---- */
+    .sse-bar-wrap { display: flex; align-items: center; gap: 10px; margin: 4px 0; }
+    .sse-bar-label { font-family: var(--mono); font-size: 17px; color: var(--text2); width: 100px; }
+    .sse-bar-track { flex: 1; background: var(--bg3); border-radius: 4px; height: 16px; overflow: hidden; }
+    .sse-bar-fill  { height: 100%; background: var(--accent); border-radius: 4px; transition: width 0.4s ease; }
+    .sse-bar-val   { font-family: var(--mono); font-size: 17px; color: var(--text2); width: 90px; text-align: right; }
+
+    /* ---- Init Method Selector ---- */
+    .init-radio {
+      display: flex; gap: 10px; flex-wrap: wrap; margin-top: 0.5rem;
+    }
+    .init-option {
+      display: flex; align-items: flex-start; gap: 10px;
+      padding: 10px 14px; border-radius: var(--radius);
+      border: 1.5px solid var(--border2); background: var(--bg4);
+      cursor: pointer; transition: all 0.15s; flex: 1; min-width: 180px;
+    }
+    .init-option:hover { border-color: var(--accent); background: var(--bg3); }
+    .init-option.selected { border-color: var(--accent); background: rgba(79,156,249,0.1); }
+    .init-option input[type=radio] { display: none; }
+    .init-dot {
+      width: 16px; height: 16px; border-radius: 50%;
+      border: 2px solid var(--border2); flex-shrink: 0; margin-top: 3px;
+      transition: all 0.15s;
+    }
+    .init-option.selected .init-dot { border-color: var(--accent); background: var(--accent); }
+    .init-label { font-size: 20px; font-weight: 500; color: var(--text); }
+    .init-desc  { font-size: 17px; color: var(--text3); margin-top: 2px; }
+
+    /* ---- Scrollable table wrapper ---- */
+    .tbl-scroll-both {
+      overflow: auto; max-height: 340px;
+      border: 1px solid var(--border); border-radius: var(--radius);
+    }
+    .tbl-scroll-both table thead th {
+      position: sticky; top: 0; z-index: 2; background: var(--bg);
+    }
+
+    /* ---- Step divider ---- */
+    .step-divider {
+      display: flex; align-items: center; gap: 10px;
+      margin: 1.25rem 0 0.75rem;
+    }
+    .step-divider::before, .step-divider::after {
+      content: ''; flex: 1; height: 1px; background: var(--border);
+    }
+    .step-divider span {
+      font-family: var(--mono); font-size: 16px;
+      color: var(--text3); white-space: nowrap;
+    }
+
+    /* ---- Toggle formula button ---- */
+    .km-toggle {
+      display: inline-flex; align-items: center; gap: 7px;
+      cursor: pointer; font-size: 17px; color: var(--accent);
+      background: rgba(79,156,249,0.08); border: 1px solid rgba(79,156,249,0.22);
+      border-radius: var(--radius); padding: 4px 12px;
+      margin: 0.35rem 0 0; transition: background 0.15s;
+      font-family: var(--mono); user-select: none;
+    }
+    .km-toggle:hover { background: rgba(79,156,249,0.15); }
+    .km-toggle .tog-icon { transition: transform 0.2s; font-size: 13px; }
+    .km-toggle.open .tog-icon { transform: rotate(90deg); }
+
+    /* ---- Summary cluster tile ---- */
+    .cluster-tile {
+      background: var(--bg3); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: 1rem 1.25rem;
+      margin-bottom: 0.75rem;
+    }
+    .cluster-tile-head {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 0.65rem;
+    }
+    .cluster-tile-name { font-size: 22px; font-weight: 600; }
+    .cluster-tile-count { font-size: 18px; color: var(--text3); font-family: var(--mono); }
+
+    /* ---- Copy button ---- */
+    .copy-btn {
+      display: inline-flex; align-items: center; gap: 5px;
+      cursor: pointer; font-size: 14px; font-family: var(--mono);
+      color: var(--text3); background: transparent; border: none;
+      padding: 2px 6px; border-radius: 4px;
+      transition: color 0.15s, background 0.15s;
+    }
+    .copy-btn:hover { color: var(--accent); background: rgba(79,156,249,0.1); }
+
+    /* ---- Page wrapper ---- */
+    .page-wrapper { min-height: 60vh; }
+
+    /* ---- Processing Overlay ---- */
+    #processing-overlay {
+      display: none;
+      position: fixed; inset: 0; z-index: 9999;
+      background: rgba(15,17,23,0.88);
+      backdrop-filter: blur(6px);
+      align-items: center; justify-content: center;
+      flex-direction: column; gap: 1.5rem;
+    }
+    #processing-overlay.active { display: flex; }
+    .overlay-card {
+      background: var(--bg2);
+      border: 1px solid var(--border2);
+      border-radius: var(--radius-lg);
+      padding: 2.5rem 3rem;
+      text-align: center;
+      min-width: 340px;
+      animation: fadeIn 0.2s ease both;
+    }
+    .overlay-spinner {
+      width: 48px; height: 48px;
+      border: 3px solid var(--border2);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.75s linear infinite;
+      margin: 0 auto 1.25rem;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .overlay-title {
+      font-size: 22px; font-weight: 600; color: var(--text);
+      margin-bottom: 0.4rem;
+    }
+    .overlay-step {
+      font-size: 18px; color: var(--text3); font-family: var(--mono);
+      margin-bottom: 1rem;
+    }
+    .overlay-bar-track {
+      width: 100%; height: 6px; background: var(--bg4);
+      border-radius: 3px; overflow: hidden;
+    }
+    .overlay-bar-fill {
+      height: 100%; background: var(--accent);
+      border-radius: 3px; transition: width 0.3s ease;
+      width: 0%;
+    }
+    .overlay-steps-list {
+      display: flex; flex-direction: column; gap: 6px;
+      margin-top: 1.25rem; text-align: left;
+    }
+    .overlay-step-item {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 17px; color: var(--text3); font-family: var(--mono);
+      transition: color 0.2s;
+    }
+    .overlay-step-item.done   { color: var(--green); }
+    .overlay-step-item.active { color: var(--accent); }
+    .overlay-step-item .step-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--border2); flex-shrink: 0;
+      transition: background 0.2s;
+    }
+    .overlay-step-item.done   .step-dot { background: var(--green); }
+    .overlay-step-item.active .step-dot { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+
+    /* ---- PCA Chart styles ---- */
+    .pca-canvas-wrap {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      position: relative;
+    }
+    .pca-legend {
+      display: flex; flex-wrap: wrap; gap: 10px;
+      padding: 0.75rem 1rem;
+      border-top: 1px solid var(--border);
+    }
+    .pca-legend-item {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 17px; font-family: var(--mono); color: var(--text2);
+    }
+    .pca-legend-dot {
+      width: 10px; height: 10px; border-radius: 50%;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ===================== NAVIGATION ===================== -->
+<nav class="nav">
+  <div class="nav-brand" onclick="window.location.href='../index.html'" style="cursor:pointer">
+    <div class="dot"></div>
+    ML Manual Calculator
+  </div>
+  <div class="breadcrumb" id="breadcrumb">
+    <a class="crumb" href="../index.html">Beranda</a>
+    <span class="sep">/</span>
+    <span class="active-crumb">K-Means Clustering</span>
+  </div>
+</nav>
+
+<!-- ===================== PROCESSING OVERLAY ===================== -->
+<div id="processing-overlay">
+  <div class="overlay-card">
+    <div class="overlay-spinner"></div>
+    <div class="overlay-title">Memproses K-Means...</div>
+    <div class="overlay-step" id="overlay-step-text">Inisialisasi...</div>
+    <div class="overlay-bar-track">
+      <div class="overlay-bar-fill" id="overlay-bar"></div>
+    </div>
+    <div class="overlay-steps-list" id="overlay-steps-list"></div>
+  </div>
+</div>
+
+<!-- ============================================================
+     PAGE: INPUT
+     ============================================================ -->
+<div id="page-input" class="page-wrapper">
+  <div class="container">
+    <h2 class="page-title">K-Means <strong>Clustering</strong></h2>
+    <p class="page-subtitle">Upload CSV → Preview → Konfigurasi → Proses → Lihat perhitungan manual iterasi lengkap</p>
+
+    <!-- STEP 1: Upload -->
+    <div class="section">
+      <div class="section-head">
+        <div class="step-circle">1</div>
+        <div class="section-title">Upload Dataset CSV</div>
+      </div>
+      <div class="section-body">
+        <div class="upload-zone" id="drop-zone" onclick="document.getElementById('csv-input').click()">
+          <span class="up-icon">&#8686;</span>
+          <div class="up-title">Klik untuk pilih file .csv</div>
+          <div class="up-sub">atau drag &amp; drop file ke sini</div>
+        </div>
+        <input type="file" id="csv-input" accept=".csv" style="display:none">
+
+        <div style="margin-top:1rem;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span style="font-size:20px;color:var(--text3)">Tidak punya dataset?</span>
+          <button class="btn btn-sm" onclick="loadSample('pelanggan')">&#9654; Dataset Pelanggan (15 baris)</button>
+          <button class="btn btn-sm" onclick="loadSample('nilai')">&#9654; Dataset Nilai Siswa (12 baris)</button>
+          <button class="btn btn-sm" onclick="loadSample('belanja')">&#9654; Dataset Belanja (20 baris)</button>
+        </div>
+
+        <div class="info-box" style="margin-top:1rem;margin-bottom:0">
+          <strong>Format CSV:</strong> Baris pertama = header kolom.
+          Kolom <em>numerik</em> akan otomatis dideteksi sebagai fitur clustering.
+          Kolom ID/nama/teks dapat dihapus centangnya di langkah berikutnya.
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 2: Preview & Config -->
+    <div class="section" id="preview-section" style="display:none">
+      <div class="section-head">
+        <div class="step-circle">2</div>
+        <div class="section-title">Preview &amp; Pembersihan Data</div>
+      </div>
+      <div class="section-body">
+        <div id="preview-info" style="margin-bottom:0.75rem"></div>
+        <div id="missing-report" style="margin-bottom:0.75rem"></div>
+        <div class="tbl-wrap-scroll" style="max-height:260px">
+          <table id="preview-table"></table>
+        </div>
+
+        <!-- Kolom Fitur -->
+        <div style="margin-top:1.25rem;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1rem 1.25rem;">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:0.75rem">
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="width:22px;height:22px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff">F</div>
+              <span style="font-size:20px;font-weight:500;color:var(--text)">Pilih Kolom Fitur (Numerik)</span>
+            </div>
+            <div style="display:flex;gap:6px">
+              <button class="btn btn-sm" onclick="setAllFeatureCols(true)">&#10003; Pilih Semua</button>
+              <button class="btn btn-sm" onclick="setAllFeatureCols(false)">&#10005; Hapus Semua</button>
+            </div>
+          </div>
+          <div class="info-box" style="margin-bottom:0.85rem;font-size:18px">
+            <strong>Tips:</strong> K-Means hanya bekerja pada fitur <strong>numerik</strong>.
+            Hapus centang kolom ID, nama, atau teks. Minimal <strong>2 fitur</strong> diperlukan.
+          </div>
+          <div id="col-checkboxes" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+          <div id="col-selector-warn" style="margin-top:0.65rem"></div>
+        </div>
+
+        <!-- Missing Value Strategy -->
+        <div id="mv-section" style="margin-top:1.25rem;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1rem 1.25rem;display:none">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:0.85rem">
+            <div style="width:22px;height:22px;border-radius:50%;background:var(--yellow);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#1a1000">!</div>
+            <span style="font-size:20px;font-weight:500;color:var(--text)">Strategi Penanganan Missing Value</span>
+          </div>
+          <div id="mv-detail" style="margin-bottom:0.85rem"></div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:19px">
+              <input type="radio" name="mv-strategy" value="mean" checked onchange="updateMVStrategy(this.value)"
+                style="accent-color:var(--accent);width:16px;height:16px">
+              <span>Imputasi <strong>Mean</strong> (rata-rata kolom)</span>
+            </label>
+            <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:19px">
+              <input type="radio" name="mv-strategy" value="median" onchange="updateMVStrategy(this.value)"
+                style="accent-color:var(--accent);width:16px;height:16px">
+              <span>Imputasi <strong>Median</strong></span>
+            </label>
+            <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:19px">
+              <input type="radio" name="mv-strategy" value="drop" onchange="updateMVStrategy(this.value)"
+                style="accent-color:var(--accent);width:16px;height:16px">
+              <span>Hapus baris yang memiliki missing value</span>
+            </label>
+          </div>
+          <div id="mv-preview-info" style="margin-top:0.65rem"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 3: K-Means Config -->
+    <div class="section" id="config-section" style="display:none">
+      <div class="section-head">
+        <div class="step-circle">3</div>
+        <div class="section-title">Konfigurasi K-Means</div>
+      </div>
+      <div class="section-body">
+
+        <!-- Jumlah Cluster K -->
+        <div style="margin-bottom:1.25rem">
+          <div style="font-size:20px;font-weight:500;margin-bottom:0.5rem;color:var(--text)">
+            Jumlah Cluster <span style="font-family:var(--mono);color:var(--accent)">K</span>
+          </div>
+          <div class="k-selector" id="k-selector"></div>
+          <div style="margin-top:0.6rem;font-size:18px;color:var(--text3)" id="k-desc"></div>
+        </div>
+
+        <!-- Metode Inisialisasi -->
+        <div style="margin-bottom:1.25rem">
+          <div style="font-size:20px;font-weight:500;margin-bottom:0.5rem;color:var(--text)">
+            Metode Inisialisasi Centroid
+          </div>
+          <div class="init-radio">
+            <label class="init-option selected" id="init-opt-first" onclick="selectInit('first')">
+              <input type="radio" name="init-method" value="first">
+              <div class="init-dot"></div>
+              <div>
+                <div class="init-label">K Data Pertama</div>
+                <div class="init-desc">Gunakan K baris pertama sebagai centroid awal. Mudah dilacak secara manual.</div>
+              </div>
+            </label>
+            <label class="init-option" id="init-opt-random" onclick="selectInit('random')">
+              <input type="radio" name="init-method" value="random">
+              <div class="init-dot"></div>
+              <div>
+                <div class="init-label">Random</div>
+                <div class="init-desc">Pilih K baris secara acak. Hasil berbeda tiap run tanpa seed.</div>
+              </div>
+            </label>
+            <label class="init-option" id="init-opt-manual" onclick="selectInit('manual')">
+              <input type="radio" name="init-method" value="manual">
+              <div class="init-dot"></div>
+              <div>
+                <div class="init-label">Manual (Indeks Baris)</div>
+                <div class="init-desc">Tentukan sendiri baris mana yang jadi centroid awal.</div>
+              </div>
+            </label>
+          </div>
+          <div id="manual-init-input" style="display:none;margin-top:0.75rem">
+            <div style="font-size:18px;color:var(--text2);margin-bottom:0.35rem">Masukkan indeks baris (0-based), pisahkan dengan koma:</div>
+            <input type="text" id="manual-centroid-input" placeholder="Contoh: 0, 4, 9"
+              style="background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius);
+                     color:var(--text);font-family:var(--mono);font-size:18px;padding:8px 12px;width:260px;outline:none">
+            <div id="manual-init-warn" style="margin-top:0.4rem;font-size:17px;color:var(--red)"></div>
+          </div>
+        </div>
+
+        <!-- Jarak -->
+        <div style="margin-bottom:1.25rem">
+          <div style="font-size:20px;font-weight:500;margin-bottom:0.5rem;color:var(--text)">
+            Metrik Jarak
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:19px">
+              <input type="radio" name="dist-metric" value="euclidean" checked
+                style="accent-color:var(--accent);width:16px;height:16px">
+              <span><strong>Euclidean</strong> — √Σ(xᵢ−cᵢ)²</span>
+            </label>
+            <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:19px">
+              <input type="radio" name="dist-metric" value="manhattan"
+                style="accent-color:var(--accent);width:16px;height:16px">
+              <span><strong>Manhattan</strong> — Σ|xᵢ−cᵢ|</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Max Iterasi -->
+        <div style="margin-bottom:1.25rem">
+          <div style="font-size:20px;font-weight:500;margin-bottom:0.5rem;color:var(--text)">
+            Maksimum Iterasi
+          </div>
+
+          <!-- Slider: range 3–30 -->
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+            <input type="range" id="max-iter-slider" min="3" max="30" step="1" value="10"
+              oninput="onIterSliderChange(this.value)"
+              style="width:220px;accent-color:var(--accent);cursor:pointer;height:6px">
+            <span id="max-iter-val"
+              style="font-family:var(--mono);font-size:22px;color:var(--accent);font-weight:600;min-width:36px">
+              10
+            </span>
+            <!-- Badge "maks" muncul saat slider di posisi 30 -->
+            <span id="max-iter-badge" style="display:none;
+              font-family:var(--mono);font-size:15px;padding:3px 10px;border-radius:10px;
+              background:rgba(251,191,36,0.12);color:var(--yellow);
+              border:1px solid rgba(251,191,36,0.3)">
+              + input manual aktif
+            </span>
+          </div>
+
+          <!-- Input manual — muncul hanya saat slider = 30 -->
+          <div id="max-iter-manual-wrap" style="display:none;margin-top:0.75rem;
+            background:var(--bg3);border:1px solid var(--border2);
+            border-radius:var(--radius);padding:0.75rem 1rem">
+            <div style="font-size:18px;color:var(--text2);margin-bottom:0.4rem">
+              Masukkan jumlah iterasi maksimum (31 – 500):
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+              <input type="number" id="max-iter-manual" min="31" max="500" value="50"
+                oninput="onIterManualChange(this.value)"
+                style="background:var(--bg);border:1px solid var(--border2);
+                  border-radius:var(--radius);color:var(--text);
+                  font-family:var(--mono);font-size:20px;font-weight:600;
+                  padding:6px 12px;width:110px;outline:none;
+                  accent-color:var(--accent)">
+              <span style="font-size:17px;color:var(--text3)">iterasi</span>
+            </div>
+            <div id="max-iter-manual-warn" style="margin-top:0.5rem;font-size:16px;color:var(--yellow)"></div>
+          </div>
+
+          <div style="font-size:17px;color:var(--text3);margin-top:0.5rem">
+            Algoritma berhenti lebih awal jika centroid konvergen (tidak berubah).
+            Slider 3–30; untuk dataset besar geser ke 30 lalu isi manual.
+          </div>
+        </div>
+
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:0.5rem">
+          <button class="btn btn-primary" onclick="processKMeans()">&#9654; Proses K-Means</button>
+          <button class="btn btn-sm" onclick="resetInput()">&#8635; Reset</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ============================================================
+     PAGE: RESULT
+     ============================================================ -->
+<div id="page-result" style="display:none">
+  <div class="container">
+    <div id="result-content"></div>
+  </div>
+</div>
+
+<!-- ============================================================
+     SCRIPTS — separated JS files
+     ============================================================ -->
+<script src="../js/K_Means/km_utils.js"></script>
+<script src="../js/K_Means/km_io.js"></script>
+<script src="../js/K_Means/km_core.js"></script>
+<script src="../js/K_Means/km_render.js"></script>
+<script src="../js/K_Means/km_export.js"></script>
+
+<script>
+// Col selector logic ada di km_io.js
+
+/* ============================================================
+   MAX ITERASI — Slider + Input Manual
+   Slider range 3–30. Saat slider mencapai 30 (max),
+   input manual aktif untuk nilai 31–500.
+   ============================================================ */
+function onIterSliderChange(val) {
+  const n       = parseInt(val);
+  const display = document.getElementById('max-iter-val');
+  const badge   = document.getElementById('max-iter-badge');
+  const wrap    = document.getElementById('max-iter-manual-wrap');
+
+  display.textContent = n;
+
+  if (n >= 30) {
+    // Aktifkan input manual
+    badge.style.display = '';
+    wrap.style.display  = '';
+    display.style.color = 'var(--yellow)';
+  } else {
+    // Sembunyikan input manual
+    badge.style.display = 'none';
+    wrap.style.display  = 'none';
+    display.style.color = 'var(--accent)';
+    document.getElementById('max-iter-manual-warn').textContent = '';
+  }
+}
+
+function onIterManualChange(val) {
+  const n    = parseInt(val);
+  const warn = document.getElementById('max-iter-manual-warn');
+  if (isNaN(n) || n < 31) {
+    warn.textContent = '⚠ Nilai minimal 31.';
+  } else if (n > 500) {
+    warn.textContent = '⚠ Nilai maksimal 500. Terlalu besar bisa memperlambat browser.';
+  } else if (n > 200) {
+    warn.textContent = '⚠ Nilai > 200 mungkin lambat untuk dataset besar.';
+  } else {
+    warn.textContent = '';
+  }
+}
+
+/**
+ * Baca nilai iterasi aktual — dipanggil oleh readConfig() di km_io.js.
+ * Jika slider di posisi 30, ambil dari input manual (jika valid).
+ */
+function getMaxIter() {
+  const sliderVal = parseInt(document.getElementById('max-iter-slider').value);
+  if (sliderVal >= 30) {
+    const manualEl  = document.getElementById('max-iter-manual');
+    const manualVal = manualEl ? parseInt(manualEl.value) : NaN;
+    if (!isNaN(manualVal) && manualVal >= 31 && manualVal <= 500) {
+      return manualVal;
+    }
+    // Fallback jika input manual tidak valid
+    return 30;
+  }
+  return sliderVal;
+}
+
+
+
+/* ============================================================
+   PROCESSING OVERLAY
+   Ditampilkan saat tombol Proses ditekan, memberikan feedback
+   visual progress untuk setiap tahap K-Means.
+   ============================================================ */
+const OVERLAY_STEPS = [
+  { id: 'step-norm',   label: 'Normalisasi data (Min-Max)' },
+  { id: 'step-init',   label: 'Inisialisasi centroid'      },
+  { id: 'step-iter',   label: 'Iterasi & assignment'       },
+  { id: 'step-sse',    label: 'Hitung SSE / inertia'       },
+  { id: 'step-render', label: 'Render hasil'               },
+];
+
+function showProcessingOverlay() {
+  const overlay = document.getElementById('processing-overlay');
+  const list    = document.getElementById('overlay-steps-list');
+  const bar     = document.getElementById('overlay-bar');
+
+  list.innerHTML = OVERLAY_STEPS.map(s =>
+    `<div class="overlay-step-item" id="${s.id}">
+      <div class="step-dot"></div>${s.label}
+    </div>`
+  ).join('');
+
+  bar.style.width = '0%';
+  overlay.classList.add('active');
+}
+
+function setOverlayStep(stepId, pct) {
+  const bar  = document.getElementById('overlay-bar');
+  const text = document.getElementById('overlay-step-text');
+  if (bar)  bar.style.width = pct + '%';
+
+  OVERLAY_STEPS.forEach(s => {
+    const el = document.getElementById(s.id);
+    if (!el) return;
+    el.classList.remove('done', 'active');
+    if (s.id === stepId) {
+      el.classList.add('active');
+      if (text) text.textContent = s.label + '...';
+    } else if (OVERLAY_STEPS.findIndex(x => x.id === s.id) <
+               OVERLAY_STEPS.findIndex(x => x.id === stepId)) {
+      el.classList.add('done');
+    }
+  });
+}
+
+function hideProcessingOverlay() {
+  document.getElementById('processing-overlay').classList.remove('active');
+}
+
+/* ============================================================
+   PATCH processKMeans — wrap dengan overlay
+   Ganti panggilan processKMeans asli agar membungkus overlay.
+   ============================================================ */
+(function patchProcessKMeans() {
+  // Tunggu km_core.js load, lalu wrap
+  window.addEventListener('load', () => {
+    const orig = window.processKMeans;
+    if (typeof orig !== 'function') return;
+
+    window.processKMeans = function() {
+      showProcessingOverlay();
+
+      // Jalankan tiap tahap dengan setTimeout agar UI sempat update
+      setTimeout(() => { setOverlayStep('step-norm', 15); }, 30);
+      setTimeout(() => { setOverlayStep('step-init', 35); }, 80);
+      setTimeout(() => { setOverlayStep('step-iter', 55); }, 130);
+      setTimeout(() => {
+        setOverlayStep('step-sse', 80);
+        setTimeout(() => {
+          setOverlayStep('step-render', 95);
+          try {
+            orig.call(this);
+          } catch(e) {
+            console.error('K-Means error:', e);
+          }
+          setTimeout(() => hideProcessingOverlay(), 400);
+        }, 60);
+      }, 180);
+    };
+  });
+})();
+</script>
+
+</body>
+</html>
