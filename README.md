@@ -11,7 +11,7 @@ bisa diverifikasi.
 ## Tampilan Website
 
 ### Halaman Utama
-![Utama](images/screenshot.jpg)
+![Utama](images/Screenshot.jpg)
 
 ### Halaman Upload
 ![Upload](images/Upload.jpg)
