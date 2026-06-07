@@ -72,5 +72,4 @@ js/Shared/    → LCG random number generator
 
 ## Mata Kuliah
 
-Proyek ini dibuat untuk mata kuliah Machine Learning
-Program Studi Sistem Informasi
+Proyek ini masih beta sehingga masih banyak bug atau perbedaan
