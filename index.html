@@ -1,92 +1,383 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" data-theme="light">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ML Manual Calculator — Beranda</title>
-  <link rel="icon" type="image/x-icon" href="Assets/Image/Logo.ico">
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css">
-  <style>
-    .algo-grid {
-      grid-template-columns: repeat(3, 1fr) !important;
-    }
-    @media (max-width: 700px) {
-      .algo-grid { grid-template-columns: repeat(2, 1fr) !important; }
-    }
-    @media (max-width: 420px) {
-      .algo-grid { grid-template-columns: 1fr !important; }
-    }
-  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SPK Web App — Sistem Pendukung Keputusan</title>
+  <link rel="icon" type="image/x-icon" href="Assets/icons/Logo.ico">
+  <!-- ── Stylesheets ── -->
+  <link rel="stylesheet" href="css/main.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/responsive.css" />
 </head>
 <body>
 
-<nav class="nav">
-  <div class="nav-brand">
-    <div class="dot"></div>
-    ML Manual Calculator
-  </div>
-  <div class="breadcrumb">
-    <span class="active-crumb">Beranda</span>
-  </div>
-</nav>
-
-<div class="container">
-  <div class="home-hero">
-    <div class="tag">MANUAL CALCULATION TOOL</div>
-    <h1>Algoritma<br><strong>Machine Learning</strong></h1>
-    <p>
-      Pilih algoritma, upload dataset CSV, dan lihat seluruh proses
-      perhitungan manual step-by-step secara otomatis.
-    </p>
+  <!-- ========== PAGE LOADER ========== -->
+  <div class="page-loader" id="pageLoader">
+    <div class="loader-dot"></div>
+    <div class="loader-dot"></div>
+    <div class="loader-dot"></div>
   </div>
 
-  <div class="algo-grid">
+  <!-- ========== NAVBAR ========== -->
+  <nav class="navbar">
+    <div class="container">
+      <div class="navbar-inner">
 
-    <a class="algo-card" href="Html/naive_bayes.html">
-      <div class="algo-icon">&#9670;</div>
-      <div class="algo-name">Naive Bayes</div>
-      <div class="algo-desc">Klasifikasi probabilistik berbasis Teorema Bayes dengan Laplace Smoothing</div>
-      <div class="algo-badge badge-available">TERSEDIA</div>
-    </a>
+        <a href="index.html" class="nav-logo">
+          <div class="nav-logo-icon">SPK</div>
+          DecisionLab
+        </a>
 
-    <a class="algo-card" href="Html/k_means.html">
-      <div class="algo-icon">&#9632;</div>
-      <div class="algo-name">K-Means</div>
-      <div class="algo-desc">Clustering berbasis centroid dengan iterasi konvergensi</div>
-      <div class="algo-badge badge-available">TERSEDIA</div>
-    </a>
+        <ul class="nav-links" id="navLinks">
+          <li><a href="#metode" class="active">Metode</a></li>
+          <li><a href="#pembobotan">Pembobotan</a></li>
+          <li><a href="#cara-kerja">Cara Kerja</a></li>
+          <li><a href="input.html">Input Data</a></li>
+          <li><a href="result.html">Hasil Ranking</a></li>
+        </ul>
 
-    <a class="algo-card" href="Html/c45.html">
-      <div class="algo-icon">&#9650;</div>
-      <div class="algo-name">C4.5</div>
-      <div class="algo-desc">Decision tree dengan entropy, information gain, dan gain ratio</div>
-      <div class="algo-badge badge-available">TERSEDIA</div>
-    </a>
+        <div class="nav-actions">
+          <button class="theme-toggle" id="themeToggle" title="Ganti tema" aria-label="Toggle dark mode">
+            <svg class="icon-sun" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+              fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="4"/>
+              <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+            </svg>
+            <svg class="icon-moon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+              fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+            </svg>
+          </button>
+          <button class="menu-toggle" id="menuToggle" aria-label="Buka menu">&#9776;</button>
+        </div>
 
-    <a class="algo-card" href="Html/knn.html">
-      <div class="algo-icon">&#9633;</div>
-      <div class="algo-name">K-NN</div>
-      <div class="algo-desc">Klasifikasi berbasis jarak (Euclidean, Manhattan, Minkowski) dengan normalisasi dan voting</div>
-      <div class="algo-badge badge-available">TERSEDIA</div>
-    </a>
+      </div>
+    </div>
+  </nav>
 
-    <a class="algo-card" href="Html/linear_regression.html">
-      <div class="algo-icon">&#9135;</div>
-      <div class="algo-name">Linear Regression</div>
-      <div class="algo-desc">Regresi linear sederhana &amp; berganda dengan OLS, Ridge, dan Lasso</div>
-      <div class="algo-badge badge-available">TERSEDIA</div>
-    </a>
+  <!-- ========== HERO ========== -->
+  <section class="hero">
+    <div class="hero-bg-grid"></div>
+    <div class="container">
+      <div class="hero-content">
 
-    <a class="algo-card" href="Html/apriori.html">
-      <div class="algo-icon">&#10070;</div>
-      <div class="algo-name">Apriori</div>
-      <div class="algo-desc">Association rule mining dengan support, confidence, dan lift berbasis frequent itemsets</div>
-      <div class="algo-badge badge-available">TERSEDIA</div>
-    </a>
+        <div class="hero-badge">
+          <span class="hero-badge-dot"></span>
+          Multi-Criteria Decision Making
+        </div>
 
+        <h1 class="hero-title">
+          Ranking Keputusan<br>
+          dengan <span>5 Metode SPK</span>
+        </h1>
+
+        <p class="hero-desc">
+          Pilih metode terbaik — SAW, TOPSIS, WASPAS, MOORA, atau EDAS — input data Anda,
+          dan dapatkan peringkat alternatif secara otomatis lengkap dengan ekspor hasil.
+        </p>
+
+        <div class="hero-actions">
+          <a href="input.html" class="btn btn-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none"
+              stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+            Mulai Analisis
+          </a>
+          <a href="#cara-kerja" class="btn btn-outline">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none"
+              stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>
+            </svg>
+            Pelajari Cara Kerja
+          </a>
+        </div>
+
+      </div><!-- /hero-content -->
+
+      <!-- Stats Bar -->
+      <div class="stats-bar">
+        <div class="stat-item">
+          <div class="stat-number">5</div>
+          <div class="stat-label">Metode SPK</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number">2</div>
+          <div class="stat-label">Pembobotan Otomatis</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number">&#8734;</div>
+          <div class="stat-label">Alternatif &amp; Kriteria</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number">3</div>
+          <div class="stat-label">Format Ekspor</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ========== METODE SPK ========== -->
+  <section class="section" id="metode">
+    <div class="container">
+
+      <div class="section-header fade-up">
+        <span class="section-label">Algoritma</span>
+        <h2 class="section-title">Pilih Metode SPK</h2>
+        <p class="section-desc">
+          Lima metode multi-kriteria terbukti secara ilmiah. Klik kartu untuk mulai analisis dengan metode tersebut.
+        </p>
+      </div>
+
+      <div class="methods-grid">
+
+        <!-- SAW -->
+        <a href="input.html?method=saw" class="method-card saw fade-up">
+          <div class="card-header">
+            <div class="card-icon">SAW</div>
+            <span class="card-badge">Additive</span>
+          </div>
+          <div>
+            <div class="card-title">Simple Additive Weighting</div>
+            <div class="card-subtitle">Weighted Sum Model (WSM)</div>
+          </div>
+          <p class="card-desc">
+            Metode penjumlahan terbobot yang paling intuitif. Setiap nilai alternatif dikalikan bobot kriterianya lalu dijumlahkan untuk mendapat skor akhir.
+          </p>
+          <div class="card-tags">
+            <span class="tag">Normalisasi Linear</span>
+            <span class="tag">Mudah Dipahami</span>
+            <span class="tag">Cepat</span>
+          </div>
+          <div class="card-footer">
+            <span class="card-meta">Kompleksitas rendah</span>
+            <span class="card-arrow">&#8594;</span>
+          </div>
+        </a>
+
+        <!-- TOPSIS -->
+        <a href="input.html?method=topsis" class="method-card topsis fade-up">
+          <div class="card-header">
+            <div class="card-icon">TOP</div>
+            <span class="card-badge">Distance</span>
+          </div>
+          <div>
+            <div class="card-title">TOPSIS</div>
+            <div class="card-subtitle">Technique for Order Preference by Similarity to Ideal Solution</div>
+          </div>
+          <p class="card-desc">
+            Menentukan ranking berdasarkan jarak relatif terhadap solusi ideal positif dan negatif. Alternatif terbaik paling dekat ke ideal positif dan terjauh dari ideal negatif.
+          </p>
+          <div class="card-tags">
+            <span class="tag">Solusi Ideal</span>
+            <span class="tag">Euclidean Distance</span>
+            <span class="tag">Populer</span>
+          </div>
+          <div class="card-footer">
+            <span class="card-meta">Kompleksitas menengah</span>
+            <span class="card-arrow">&#8594;</span>
+          </div>
+        </a>
+
+        <!-- WASPAS -->
+        <a href="input.html?method=waspas" class="method-card waspas fade-up">
+          <div class="card-header">
+            <div class="card-icon">WAS</div>
+            <span class="card-badge">Hybrid</span>
+          </div>
+          <div>
+            <div class="card-title">WASPAS</div>
+            <div class="card-subtitle">Weighted Aggregated Sum Product Assessment</div>
+          </div>
+          <p class="card-desc">
+            Kombinasi dua model: Weighted Sum Model (WSM) dan Weighted Product Model (WPM). Parameter &lambda; mengatur bobot masing-masing model untuk fleksibilitas tinggi.
+          </p>
+          <div class="card-tags">
+            <span class="tag">WSM + WPM</span>
+            <span class="tag">Parameter &lambda;</span>
+            <span class="tag">Akurasi Tinggi</span>
+          </div>
+          <div class="card-footer">
+            <span class="card-meta">Kompleksitas menengah</span>
+            <span class="card-arrow">&#8594;</span>
+          </div>
+        </a>
+
+        <!-- MOORA -->
+        <a href="input.html?method=moora" class="method-card moora fade-up">
+          <div class="card-header">
+            <div class="card-icon">MOO</div>
+            <span class="card-badge">Ratio</span>
+          </div>
+          <div>
+            <div class="card-title">MOORA</div>
+            <div class="card-subtitle">Multi-Objective Optimization on the Basis of Ratio Analysis</div>
+          </div>
+          <p class="card-desc">
+            Menggunakan dua pendekatan: Ratio System dan Reference Point. Hasilnya digabungkan menghasilkan ranking yang lebih robust terhadap perbedaan skala kriteria.
+          </p>
+          <div class="card-tags">
+            <span class="tag">Ratio System</span>
+            <span class="tag">Reference Point</span>
+            <span class="tag">Robust</span>
+          </div>
+          <div class="card-footer">
+            <span class="card-meta">Kompleksitas menengah</span>
+            <span class="card-arrow">&#8594;</span>
+          </div>
+        </a>
+
+        <!-- EDAS -->
+        <a href="input.html?method=edas" class="method-card edas fade-up">
+          <div class="card-header">
+            <div class="card-icon">EDA</div>
+            <span class="card-badge">Average</span>
+          </div>
+          <div>
+            <div class="card-title">EDAS</div>
+            <div class="card-subtitle">Evaluation based on Distance from Average Solution</div>
+          </div>
+          <p class="card-desc">
+            Mengevaluasi alternatif berdasarkan deviasi positif dan negatif dari solusi rata-rata. Sangat efektif ketika ada konflik antar kriteria yang signifikan.
+          </p>
+          <div class="card-tags">
+            <span class="tag">PDA &amp; NDA</span>
+            <span class="tag">Rata-rata Solusi</span>
+            <span class="tag">Konflik Kriteria</span>
+          </div>
+          <div class="card-footer">
+            <span class="card-meta">Kompleksitas menengah</span>
+            <span class="card-arrow">&#8594;</span>
+          </div>
+        </a>
+
+      </div><!-- /methods-grid -->
+    </div>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- ========== PEMBOBOTAN ========== -->
+  <section class="section" id="pembobotan">
+    <div class="container">
+
+      <div class="section-header fade-up">
+        <span class="section-label">Pembobotan</span>
+        <h2 class="section-title">Tentukan Bobot Kriteria</h2>
+        <p class="section-desc">
+          Masukkan bobot secara manual atau gunakan pembobotan otomatis berbasis data untuk hasil yang lebih objektif.
+        </p>
+      </div>
+
+      <div class="weighting-grid">
+        <a href="input.html?weight=manual" class="weight-card fade-up">
+          <div class="weight-icon">&#9998;</div>
+          <div class="weight-info">
+            <div class="weight-title">Bobot Manual</div>
+            <div class="weight-desc">Tentukan bobot setiap kriteria secara langsung sesuai preferensi ahli atau kebijakan organisasi.</div>
+          </div>
+        </a>
+        <a href="input.html?weight=entropy" class="weight-card fade-up">
+          <div class="weight-icon">&#128202;</div>
+          <div class="weight-info">
+            <div class="weight-title">Entropy</div>
+            <div class="weight-desc">Hitung bobot otomatis dari variasi data menggunakan teori informasi Shannon. Kriteria dengan variasi tinggi mendapat bobot lebih besar.</div>
+          </div>
+        </a>
+        <a href="input.html?weight=critic" class="weight-card fade-up">
+          <div class="weight-icon">&#128300;</div>
+          <div class="weight-info">
+            <div class="weight-title">CRITIC</div>
+            <div class="weight-desc">Criteria Importance Through Intercriteria Correlation. Mempertimbangkan standar deviasi dan korelasi antar kriteria secara bersamaan.</div>
+          </div>
+        </a>
+      </div>
+
+    </div>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- ========== CARA KERJA ========== -->
+  <section class="section" id="cara-kerja">
+    <div class="container">
+
+      <div class="section-header fade-up">
+        <span class="section-label">Alur Kerja</span>
+        <h2 class="section-title">Cara Menggunakan Aplikasi</h2>
+        <p class="section-desc">
+          Empat langkah dari pemilihan metode hingga hasil ranking yang siap diunduh.
+        </p>
+      </div>
+
+      <div class="steps-grid">
+        <div class="step-card fade-up">
+          <div class="step-number">01</div>
+          <div class="step-title">Pilih Metode &amp; Pembobotan</div>
+          <p class="step-desc">Pilih salah satu dari 5 metode SPK dan tentukan cara pembobotan kriteria — manual, Entropy, atau CRITIC.</p>
+        </div>
+        <div class="step-card fade-up">
+          <div class="step-number">02</div>
+          <div class="step-title">Input Data Matriks</div>
+          <p class="step-desc">Masukkan alternatif dan kriteria secara langsung di tabel, atau unggah file CSV/Excel yang sudah disiapkan.</p>
+        </div>
+        <div class="step-card fade-up">
+          <div class="step-number">03</div>
+          <div class="step-title">Lihat &amp; Ekspor Hasil</div>
+          <p class="step-desc">Sistem menghitung secara otomatis dan menampilkan ranking lengkap yang bisa diunduh sebagai PDF, Excel, atau CSV.</p>
+        </div>
+        <div class="step-card fade-up">
+          <div class="step-number">04</div>
+          <div class="step-title">Bandingkan Antar Metode</div>
+          <p class="step-desc">Jalankan beberapa metode sekaligus dengan data yang sama untuk melihat perbandingan dan konsistensi hasil ranking.</p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ========== FOOTER ========== -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-inner">
+        <div>
+          <div class="footer-brand">DecisionLab SPK</div>
+          <p class="footer-text">Sistem Pendukung Keputusan Multi-Kriteria</p>
+        </div>
+        <ul class="footer-links">
+          <li><a href="#metode">Metode</a></li>
+          <li><a href="#pembobotan">Pembobotan</a></li>
+          <li><a href="input.html">Input Data</a></li>
+          <li><a href="result.html">Hasil</a></li>
+        </ul>
+        <p class="footer-text">&copy; 2025 DecisionLab. Dibuat untuk penelitian &amp; pendidikan.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ========== TOAST ========== -->
+  <div class="toast" id="toast">
+    <div class="toast-icon">&#10003;</div>
+    <span id="toastMsg">Metode dipilih!</span>
   </div>
-</div>
+
+  <!-- ========== MODAL ========== -->
+  <div class="modal-backdrop" id="modalBackdrop">
+    <div class="modal">
+      <div class="modal-title" id="modalTitle">Tentang Metode</div>
+      <p class="modal-desc" id="modalDesc">Detail metode akan tampil di sini.</p>
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="modalClose">Tutup</button>
+        <a href="#" class="btn btn-primary" id="modalCta">Gunakan Metode Ini</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== SCRIPTS ========== -->
+  <script src="js/utils/helpers.js"></script>
+  <script src="js/app.js"></script>
 
 </body>
 </html>

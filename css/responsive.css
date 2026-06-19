@@ -1,0 +1,480 @@
+/* ============================================
+   SPK WEB APP — responsive.css
+   Breakpoints:
+   - Tablet   : max-width 1024px
+   - Mobile L : max-width  768px
+   - Mobile S : max-width  480px
+   - Tiny     : max-width  360px
+   ============================================ */
+
+
+/* ──────────────────────────────────────────
+   TABLET  (≤ 1024px)
+────────────────────────────────────────── */
+@media (max-width: 1024px) {
+
+    /* Container tighter */
+    .container {
+      padding: 0 20px;
+    }
+  
+    /* Method grid: 2 cols */
+    .methods-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  
+    /* Weighting grid: 2 cols then wrap */
+    .weighting-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  
+    /* Step indicator: compress spacing */
+    .step-indicator {
+      gap: 0;
+    }
+  
+    /* Input page layout: stack sidebar below */
+    .input-layout {
+      grid-template-columns: 1fr;
+    }
+  
+    /* Stats bar: 2 × 2 */
+    .stats-bar {
+      flex-wrap: wrap;
+    }
+  
+    .stat-item {
+      flex: 1 1 50%;
+      min-width: 0;
+    }
+  
+    .stat-item:nth-child(2) {
+      border-right: none;
+    }
+  
+    /* Result page: full-width panels */
+    .result-layout {
+      grid-template-columns: 1fr;
+    }
+  
+  }
+  
+  
+  /* ──────────────────────────────────────────
+     MOBILE L  (≤ 768px)
+  ────────────────────────────────────────── */
+  @media (max-width: 768px) {
+  
+    /* ── Navbar ── */
+    .nav-links {
+      display: none;
+    }
+  
+    .menu-toggle {
+      display: flex;
+    }
+  
+    .nav-links.mobile-open {
+      display: flex;
+      flex-direction: column;
+      position: absolute;
+      top: 64px;
+      left: 0;
+      right: 0;
+      background: var(--bg-glass);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 20px 16px;
+      z-index: 99;
+      gap: 2px;
+      box-shadow: var(--shadow-md);
+    }
+  
+    .nav-links.mobile-open a {
+      padding: 10px 14px;
+      border-radius: var(--radius-sm);
+      width: 100%;
+    }
+  
+    /* ── Hero ── */
+    .hero {
+      padding: 56px 0 36px;
+    }
+  
+    .hero-title {
+      font-size: clamp(1.8rem, 6vw, 2.6rem);
+    }
+  
+    .hero-desc {
+      font-size: 0.95rem;
+    }
+  
+    /* ── Stats ── */
+    .stats-bar {
+      margin: 32px 0;
+      border-radius: var(--radius-md);
+    }
+  
+    .stat-number {
+      font-size: 1.5rem;
+    }
+  
+    /* ── Methods ── */
+    .methods-grid {
+      grid-template-columns: 1fr;
+    }
+  
+    .method-card {
+      padding: 22px;
+    }
+  
+    /* ── Steps ── */
+    .steps-grid {
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+  
+    /* ── Weighting ── */
+    .weighting-grid {
+      grid-template-columns: 1fr;
+    }
+  
+    /* ── Section ── */
+    .section {
+      padding: 24px 0 48px;
+    }
+  
+    .section-header {
+      margin-bottom: 24px;
+    }
+  
+    /* ── Footer ── */
+    .footer-inner {
+      flex-direction: column;
+      text-align: center;
+      gap: 12px;
+    }
+  
+    .footer-links {
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+  
+    /* ── Modal ── */
+    .modal {
+      padding: 24px 20px;
+      border-radius: var(--radius-lg);
+      margin: 0 8px;
+    }
+  
+    .modal-actions {
+      flex-direction: column;
+    }
+  
+    .modal-actions .btn {
+      justify-content: center;
+    }
+  
+    /* ── Toast ── */
+    .toast {
+      bottom: 16px;
+      left: 16px;
+      right: 16px;
+      max-width: none;
+    }
+  
+    /* ── Table ── */
+    .data-table th,
+    .data-table td {
+      padding: 8px 12px;
+      font-size: 0.8rem;
+    }
+  
+    /* ── Dropzone ── */
+    .dropzone {
+      padding: 36px 20px;
+    }
+  
+    /* ── Step indicator ── */
+    .step-indicator-label {
+      display: none;
+    }
+  
+    /* ── Panels ── */
+    .panel {
+      padding: 18px;
+    }
+  
+    /* ── Weight card ── */
+    .weight-card {
+      padding: 16px;
+    }
+  
+    /* ── Accordion ── */
+    .accordion-trigger {
+      padding: 13px 16px;
+      font-size: 0.875rem;
+    }
+  
+    .accordion-body-inner {
+      padding: 13px 16px;
+    }
+  
+  }
+  
+  
+  /* ──────────────────────────────────────────
+     MOBILE S  (≤ 480px)
+  ────────────────────────────────────────── */
+  @media (max-width: 480px) {
+  
+    .container {
+      padding: 0 16px;
+    }
+  
+    /* ── Typography ── */
+    h1 { font-size: 1.9rem; }
+    h2 { font-size: 1.3rem; }
+  
+    /* ── Hero actions ── */
+    .hero-actions {
+      flex-direction: column;
+      align-items: stretch;
+    }
+  
+    .hero-actions .btn {
+      justify-content: center;
+    }
+  
+    /* ── Stats: single column ── */
+    .stat-item {
+      flex: 1 1 100%;
+      border-right: none;
+      border-bottom: 1px solid var(--border);
+    }
+  
+    .stat-item:last-child {
+      border-bottom: none;
+    }
+  
+    /* ── Steps: single column ── */
+    .steps-grid {
+      grid-template-columns: 1fr;
+    }
+  
+    /* ── Method card: smaller padding ── */
+    .method-card {
+      padding: 18px;
+      gap: 12px;
+    }
+  
+    .card-icon {
+      width: 40px;
+      height: 40px;
+      font-size: 0.7rem;
+    }
+  
+    /* ── Buttons ── */
+    .btn {
+      padding: 10px 18px;
+      font-size: 0.875rem;
+    }
+  
+    /* ── Hero badge ── */
+    .hero-badge {
+      font-size: 0.75rem;
+    }
+  
+    /* ── Section title ── */
+    .section-title {
+      font-size: 1.25rem;
+    }
+  
+    /* ── Weight card ── */
+    .weight-card {
+      flex-direction: column;
+      text-align: center;
+    }
+  
+    /* ── Radio group ── */
+    .radio-group {
+      flex-direction: column;
+    }
+  
+    /* ── Modal ── */
+    .modal {
+      padding: 20px 16px;
+    }
+  
+    /* ── Form ── */
+    .form-control {
+      font-size: 16px; /* prevent iOS zoom */
+    }
+  
+    /* ── Dropzone ── */
+    .dropzone-formats {
+      gap: 4px;
+    }
+  
+    /* ── Accordion ── */
+    .accordion-trigger {
+      padding: 11px 14px;
+      font-size: 0.85rem;
+    }
+  
+  }
+  
+  
+  /* ──────────────────────────────────────────
+     TINY  (≤ 360px)
+  ────────────────────────────────────────── */
+  @media (max-width: 360px) {
+  
+    .container {
+      padding: 0 12px;
+    }
+  
+    h1 { font-size: 1.6rem; }
+  
+    .hero {
+      padding: 44px 0 28px;
+    }
+  
+    .method-card {
+      padding: 14px;
+      gap: 10px;
+    }
+  
+    .card-footer {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+    }
+  
+    .stats-bar {
+      margin: 24px 0;
+    }
+  
+    .stat-number {
+      font-size: 1.3rem;
+    }
+  
+    .btn {
+      padding: 9px 14px;
+    }
+  
+  }
+  
+  
+  /* ──────────────────────────────────────────
+     PRINT
+  ────────────────────────────────────────── */
+  @media print {
+  
+    .navbar,
+    .hero-actions,
+    .footer,
+    .toast,
+    .modal-backdrop,
+    .page-loader,
+    .theme-toggle,
+    .menu-toggle {
+      display: none !important;
+    }
+  
+    body {
+      background: #fff;
+      color: #000;
+      font-size: 12px;
+    }
+  
+    .container {
+      max-width: 100%;
+      padding: 0;
+    }
+  
+    .method-card,
+    .weight-card,
+    .step-card,
+    .panel {
+      border: 1px solid #ddd;
+      box-shadow: none;
+      break-inside: avoid;
+    }
+  
+    .data-table {
+      font-size: 11px;
+    }
+  
+    .data-table th {
+      background: #f5f5f5;
+    }
+  
+  }
+  
+  
+  /* ──────────────────────────────────────────
+     REDUCED MOTION
+  ────────────────────────────────────────── */
+  @media (prefers-reduced-motion: reduce) {
+  
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  
+    .fade-up {
+      opacity: 1;
+      transform: none;
+    }
+  
+    .loader-dot {
+      animation: none;
+      opacity: 1;
+      transform: none;
+    }
+  
+    .hero-badge-dot {
+      animation: none;
+    }
+  
+    .spinner {
+      animation: none;
+      border-top-color: transparent;
+    }
+  
+  }
+  
+  
+  /* ──────────────────────────────────────────
+     HIGH CONTRAST
+  ────────────────────────────────────────── */
+  @media (prefers-contrast: more) {
+  
+    :root {
+      --border:        rgba(0,0,0,0.3);
+      --border-strong: rgba(0,0,0,0.5);
+    }
+  
+    [data-theme="dark"] {
+      --border:        rgba(255,255,255,0.3);
+      --border-strong: rgba(255,255,255,0.5);
+    }
+  
+    .method-card,
+    .weight-card,
+    .step-card {
+      border-width: 2px;
+    }
+  
+    .btn-outline {
+      border-width: 2px;
+    }
+  
+  }
