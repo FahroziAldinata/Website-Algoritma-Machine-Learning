@@ -61,9 +61,15 @@ function exportFormula(model, trainRows, testRows) {
 function _sheetDataset(wb, model, trainRows, testRows) {
   const allCols = [...model.feats, model.target];
 
+  const splitMethod = (typeof LR_STATE !== 'undefined' && LR_STATE.splitMethod) || 'random';
+  const splitInfo = splitMethod === 'linear'
+    ? 'Metode Split: Linear (Systematic Sampling) — tanpa randomisasi, seed diabaikan'
+    : `Metode Split: Random (LCG) — seed=${(typeof LR_STATE !== 'undefined' ? LR_STATE.seed : '') ?? ''}`;
+
   const header = ['#', 'Set', ...allCols];
   const aoa    = [
     [`Dataset — ${model.feats.join(', ')} → ${model.target}`],
+    [splitInfo],
     [],
     header,
   ];

@@ -13,6 +13,8 @@ const LR_STATE = {
   trainRows  : [],
   testRows   : [],
   model      : null,
+  splitMethod: 'random',
+  seed       : null,
 };
 
 // ── Sample Datasets ──────────────────────────────────────────
@@ -382,6 +384,7 @@ function processLR() {
         LR_STATE.trainRows = result.trainRows;
         LR_STATE.testRows  = result.testRows;
         LR_STATE.splitMethod = result.splitMethod || 'random';
+        LR_STATE.seed         = result.seed;
 
         renderResultPage(result.model, result.trainRows, result.testRows, result.testMetrics);
       }, 300);
@@ -438,7 +441,7 @@ function renderResultPage(model, trainRows, testRows, testMetrics) {
       <h2 class="page-title" style="font-size:28px;">Hasil <strong>Linear Regression</strong></h2>
       <p class="page-subtitle" style="margin-bottom:0;">${equationString(model)}</p>
       <span class="chip" style="background:var(--bg4);color:var(--text2);margin-top:4px;display:inline-block">
-        Split: ${LR_STATE.splitMethod === 'linear' ? 'Linear (Sistematis)' : 'Random (LCG, seed=' + (model.seed || '') + ')'}
+        Split: ${LR_STATE.splitMethod === 'linear' ? 'Linear (Sistematis, seed diabaikan)' : 'Random (LCG, seed=' + LR_STATE.seed + ')'}
       </span>
     </div>
       <button class="btn btn-sm" onclick="resetInput()">&#8592; Kembali &amp; Reset</button>
@@ -909,7 +912,7 @@ function goCalcPage(tabKey, page) {
 // ── Reset ─────────────────────────────────────────────────────
 function resetInput() {
   Object.assign(LR_STATE, { rawRows:[], headers:[], numericCols:[], targetCol:null,
-    featureCols:[], trainRows:[], testRows:[], model:null });
+    featureCols:[], trainRows:[], testRows:[], model:null, splitMethod:'random', seed:null });
 
   document.getElementById('page-input').style.display  = '';
   document.getElementById('page-result').style.display = 'none';
