@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>C4.5 Decision Tree — ML Manual Calculator</title>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/x-icon" href="../Assets/Image/Logo.ico">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/c45.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+
+<!-- ===================== NAVIGATION ===================== -->
+<nav class="nav">
+  <div class="nav-brand" onclick="window.location.href='../index.html'" style="cursor:pointer">
+    <div class="dot"></div>
+    ML Manual Calculator
+  </div>
+  <div class="breadcrumb" id="breadcrumb">
+    <a class="crumb" href="../index.html">Beranda</a>
+    <span class="sep">/</span>
+    <span class="active-crumb">C4.5 Decision Tree</span>
+  </div>
+</nav>
+
+<!-- ============================================================
+     PAGE: INPUT
+     ============================================================ -->
+<div id="page-input" class="page-wrapper">
+  <div class="container">
+    <h2 class="page-title">C4.5 <strong>Decision Tree</strong></h2>
+    <p class="page-subtitle">Upload CSV → Preview → Konfigurasi → Proses → Lihat pohon keputusan dan perhitungan manual Entropy & Gain Ratio</p>
+
+    <!-- STEP 1: Upload -->
+    <div class="section">
+      <div class="section-head">
+        <div class="step-circle">1</div>
+        <div class="section-title">Upload Dataset CSV</div>
+      </div>
+      <div class="section-body">
+        <div class="upload-zone" id="drop-zone" onclick="document.getElementById('csv-input').click()">
+          <span class="up-icon">&#8686;</span>
+          <div class="up-title">Klik untuk pilih file .csv</div>
+          <div class="up-sub">atau drag &amp; drop file ke sini</div>
+        </div>
+        <input type="file" id="csv-input" accept=".csv" style="display:none">
+
+        <div style="margin-top:1rem;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span style="font-size:20px;color:var(--text3)">Tidak punya dataset?</span>
+          <button class="btn btn-sm" onclick="C45_IO.loadSample('cuaca')">&#9654; Dataset Cuaca (14 baris)</button>
+          <button class="btn btn-sm" onclick="C45_IO.loadSample('kredit')">&#9654; Dataset Kredit (15 baris)</button>
+          <button class="btn btn-sm" onclick="C45_IO.loadSample('penyakit')">&#9654; Dataset Penyakit (12 baris)</button>
+        </div>
+
+        <div class="info-box" style="margin-top:1rem;margin-bottom:0">
+          <strong>Format CSV:</strong> Baris pertama = header kolom.
+          Kolom <em>kategorikal</em> dan <em>numerik</em> keduanya didukung.
+          Tentukan kolom kelas (label) di langkah berikutnya.
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 2: Preview & Kolom -->
+    <div class="section" id="preview-section" style="display:none">
+      <div class="section-head">
+        <div class="step-circle">2</div>
+        <div class="section-title">Preview &amp; Pemilihan Kolom</div>
+      </div>
+      <div class="section-body">
+        <div id="preview-info" style="margin-bottom:0.75rem"></div>
+        <div id="missing-report" style="margin-bottom:0.75rem"></div>
+        <div class="tbl-scroll-both">
+          <table id="preview-table"></table>
+        </div>
+
+        <!-- Kolom Kelas -->
+        <div style="margin-top:1.25rem;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1rem 1.25rem;">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:0.75rem">
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="width:22px;height:22px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#0d2d22">C</div>
+              <span style="font-size:20px;font-weight:500;color:var(--text)">Pilih Kolom Kelas (Label Target)</span>
+            </div>
+          </div>
+          <div class="info-box" style="margin-bottom:0.85rem;font-size:18px">
+            <strong>Kolom Kelas</strong> adalah kolom yang ingin diprediksi. Pilih satu kolom yang bersifat kategorikal (misal: Ya/Tidak, Positif/Negatif).
+          </div>
+          <div class="class-radio-group" id="class-col-radios"></div>
+          <div id="class-col-warn" style="margin-top:0.65rem"></div>
+        </div>
+
+        <!-- Kolom Fitur -->
+        <div style="margin-top:1.25rem;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1rem 1.25rem;">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:0.75rem">
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="width:22px;height:22px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff">F</div>
+              <span style="font-size:20px;font-weight:500;color:var(--text)">Pilih Kolom Fitur</span>
+            </div>
+            <div style="display:flex;gap:6px">
+              <button class="btn btn-sm" onclick="C45_IO.setAllFeatureCols(true)">&#10003; Pilih Semua</button>
+              <button class="btn btn-sm" onclick="C45_IO.setAllFeatureCols(false)">&#10005; Hapus Semua</button>
+            </div>
+          </div>
+          <div class="info-box" style="margin-bottom:0.85rem;font-size:18px">
+            <strong>Tips:</strong> Hapus centang kolom ID atau kolom yang tidak relevan. Minimal <strong>1 fitur</strong> diperlukan.
+          </div>
+          <div id="feat-col-checkboxes" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+          <div id="feat-col-warn" style="margin-top:0.65rem"></div>
+        </div>
+
+        <!-- Missing Value Strategy -->
+        <div id="mv-section" style="margin-top:1.25rem;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1rem 1.25rem;display:none">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:0.85rem">
+            <div style="width:22px;height:22px;border-radius:50%;background:var(--yellow);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#1a1000">!</div>
+            <span style="font-size:20px;font-weight:500;color:var(--text)">Strategi Penanganan Missing Value</span>
+          </div>
+          <div id="mv-detail" style="margin-bottom:0.85rem"></div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:19px">
+              <input type="radio" name="mv-strategy" value="mode" checked onchange="C45_IO.updateMVStrategy(this.value)"
+                style="accent-color:var(--accent);width:16px;height:16px">
+              <span>Imputasi <strong>Modus</strong> (nilai terbanyak per kolom)</span>
+            </label>
+            <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:19px">
+              <input type="radio" name="mv-strategy" value="mean" onchange="C45_IO.updateMVStrategy(this.value)"
+                style="accent-color:var(--accent);width:16px;height:16px">
+              <span>Imputasi <strong>Mean</strong> (kolom numerik saja)</span>
+            </label>
+            <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:19px">
+              <input type="radio" name="mv-strategy" value="drop" onchange="C45_IO.updateMVStrategy(this.value)"
+                style="accent-color:var(--accent);width:16px;height:16px">
+              <span>Hapus baris yang memiliki missing value</span>
+            </label>
+          </div>
+          <div id="mv-preview-info" style="margin-top:0.65rem"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 3: Konfigurasi C4.5 -->
+    <div class="section" id="config-section" style="display:none">
+      <div class="section-head">
+        <div class="step-circle">3</div>
+        <div class="section-title">Konfigurasi C4.5</div>
+      </div>
+      <div class="section-body">
+
+        <!-- Metode Split Criterion -->
+        <div style="margin-bottom:1.25rem">
+          <div style="font-size:20px;font-weight:500;margin-bottom:0.5rem;color:var(--text)">
+            Kriteria Pemilihan Atribut
+          </div>
+          <div class="init-radio">
+            <label class="init-option selected" id="crit-opt-gainratio" onclick="C45_Core.selectCriterion('gain_ratio')">
+              <input type="radio" name="split-criterion" value="gain_ratio" checked>
+              <div class="init-dot"></div>
+              <div>
+                <div class="init-label">Gain Ratio <span style="font-family:var(--mono);font-size:16px;color:var(--yellow)">(C4.5 default)</span></div>
+                <div class="init-desc">Information Gain dibagi Split Info. Mengoreksi bias terhadap atribut dengan banyak nilai.</div>
+              </div>
+            </label>
+            <label class="init-option" id="crit-opt-infogain" onclick="C45_Core.selectCriterion('info_gain')">
+              <input type="radio" name="split-criterion" value="info_gain">
+              <div class="init-dot"></div>
+              <div>
+                <div class="init-label">Information Gain <span style="font-family:var(--mono);font-size:16px;color:var(--accent)">(ID3)</span></div>
+                <div class="init-desc">Murni Information Gain tanpa normalisasi. Cocok untuk perbandingan dengan algoritma ID3.</div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Maksimum Kedalaman Pohon -->
+        <div style="margin-bottom:1.25rem">
+          <div style="font-size:20px;font-weight:500;margin-bottom:0.5rem;color:var(--text)">
+            Maksimum Kedalaman Pohon
+          </div>
+          <div style="display:flex;align-items:center;gap:12px">
+            <input type="range" id="max-depth-slider" min="1" max="10" step="1" value="5"
+              oninput="document.getElementById('max-depth-val').textContent=this.value"
+              style="width:220px;accent-color:var(--yellow);cursor:pointer;height:6px">
+            <span id="max-depth-val" style="font-family:var(--mono);font-size:22px;color:var(--yellow);font-weight:600">5</span>
+          </div>
+          <div style="font-size:17px;color:var(--text3);margin-top:4px">
+            Pohon berhenti tumbuh saat mencapai kedalaman ini atau saat semua daun sudah murni.
+          </div>
+        </div>
+
+        <!-- Minimum Sampel per Node -->
+        <div style="margin-bottom:1.25rem">
+          <div style="font-size:20px;font-weight:500;margin-bottom:0.5rem;color:var(--text)">
+            Minimum Sampel untuk Split
+          </div>
+          <div style="display:flex;align-items:center;gap:12px">
+            <input type="range" id="min-samples-slider" min="1" max="10" step="1" value="2"
+              oninput="document.getElementById('min-samples-val').textContent=this.value"
+              style="width:220px;accent-color:var(--accent);cursor:pointer;height:6px">
+            <span id="min-samples-val" style="font-family:var(--mono);font-size:22px;color:var(--accent);font-weight:600">2</span>
+          </div>
+          <div style="font-size:17px;color:var(--text3);margin-top:4px">
+            Node dengan sampel ≤ nilai ini otomatis dijadikan daun (leaf) dengan kelas mayoritas.
+          </div>
+        </div>
+
+        <!-- Penanganan Atribut Numerik -->
+        <div style="margin-bottom:1.25rem">
+          <div style="font-size:20px;font-weight:500;margin-bottom:0.5rem;color:var(--text)">
+            Threshold Atribut Numerik
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:19px">
+              <input type="radio" name="num-threshold" value="midpoint" checked
+                style="accent-color:var(--accent);width:16px;height:16px">
+              <span><strong>Midpoint</strong> — rata-rata dua nilai berturutan yang berbeda kelas</span>
+            </label>
+            <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:19px">
+              <input type="radio" name="num-threshold" value="mean"
+                style="accent-color:var(--accent);width:16px;height:16px">
+              <span><strong>Mean</strong> — rata-rata keseluruhan nilai kolom</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- [NEW] Train / Test Split -->
+        <div style="margin-bottom:1.25rem">
+          <div style="font-size:20px;font-weight:500;margin-bottom:0.5rem;color:var(--text)">
+            Evaluasi Model (Train / Test Split)
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:0.65rem">
+            <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:19px">
+              <input type="radio" name="split-mode" value="none" checked
+                onchange="C45_IO.updateSplitMode(this.value)"
+                style="accent-color:var(--accent);width:16px;height:16px">
+              <span><strong>Tanpa split</strong> — gunakan semua data untuk training</span>
+            </label>
+            <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:19px">
+              <input type="radio" name="split-mode" value="holdout"
+                onchange="C45_IO.updateSplitMode(this.value)"
+                style="accent-color:var(--accent);width:16px;height:16px">
+              <span><strong>Holdout</strong> — bagi data menjadi train &amp; test set</span>
+            </label>
+          </div>
+
+          <!-- Opsi holdout (tersembunyi sampai dipilih) -->
+          <div id="holdout-options" style="display:none;flex-wrap:wrap;gap:18px;align-items:center;
+               background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);
+               padding:0.75rem 1rem">
+            <label style="display:flex;align-items:center;gap:8px;font-size:19px">
+              <span style="color:var(--text2)">Rasio test:</span>
+              <select id="split-mode-select" style="display:none" aria-hidden="true"></select><!-- id dipakai resetInput untuk guard -->
+              <select id="test-ratio-input"
+                onchange="C45_IO.updateTestRatio(this.value)"
+                style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;
+                       padding:4px 10px;font-size:18px;color:var(--text);font-family:var(--mono);
+                       accent-color:var(--accent);cursor:pointer">
+                <option value="0.1">10 %</option>
+                <option value="0.2" selected>20 %</option>
+                <option value="0.25">25 %</option>
+                <option value="0.3">30 %</option>
+                <option value="0.4">40 %</option>
+              </select>
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;font-size:19px">
+              <span style="color:var(--text2)">Seed (reprodusibel):</span>
+              <input type="number" id="split-seed-input" value="42" min="0" step="1"
+                onchange="C45_IO.updateSplitSeed(this.value)"
+                style="width:80px;background:var(--bg2);border:1px solid var(--border);
+                       border-radius:6px;padding:4px 10px;font-size:18px;color:var(--text);
+                       font-family:var(--mono);text-align:center">
+            </label>
+            <div style="font-size:17px;color:var(--text3)">
+              Split dilakukan secara <em>stratified</em> — proporsi kelas dijaga di train &amp; test.
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:0.5rem">
+          <button class="btn btn-primary" onclick="C45_Core.processC45()">&#9654; Proses C4.5</button>
+          <button class="btn btn-sm" onclick="resetSplitModeRadio()">&#8635; Reset</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ============================================================
+     PAGE: RESULT
+     ============================================================ -->
+<div id="page-result" style="display:none">
+  <div class="container">
+    <div id="result-content"></div>
+  </div>
+</div>
+
+<!-- ============================================================
+     SCRIPTS
+     ============================================================ -->
+<script src="../js/Shared/lcg.js"></script>
+<script src="../js/C45/c45_utils.js"></script>
+<script src="../js/C45/c45_io.js"></script>
+<script src="../js/C45/c45_core.js"></script>
+<script src="../js/C45/c45_render.js"></script>
+<script src="../js/C45/c45_export.js"></script>
+
+<script>
+/* Pastikan holdout-options tersembunyi saat halaman pertama dimuat */
+document.addEventListener('DOMContentLoaded', function () {
+  // Sinkronkan tampilan holdout-options setiap kali radio split-mode berubah
+  document.querySelectorAll('input[name="split-mode"]').forEach(function (r) {
+    r.addEventListener('change', function () {
+      var opts = document.getElementById('holdout-options');
+      if (opts) opts.style.display = (this.value === 'holdout') ? 'flex' : 'none';
+    });
+  });
+});
+
+/* Helper global agar tombol Reset juga mereset radio split-mode ke "none" */
+function resetSplitModeRadio() {
+  document.querySelectorAll('input[name="split-mode"]').forEach(function (r) {
+    r.checked = (r.value === 'none');
+  });
+  var opts = document.getElementById('holdout-options');
+  if (opts) opts.style.display = 'none';
+  var seed = document.getElementById('split-seed-input');
+  if (seed) seed.value = '42';
+  var ratio = document.getElementById('test-ratio-input');
+  if (ratio) ratio.value = '0.2';
+  C45_IO.resetInput();
+}
+</script>
+
+</body>
+</html>

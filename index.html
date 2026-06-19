@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ML Manual Calculator — Beranda</title>
+  <link rel="icon" type="image/x-icon" href="Assets/Image/Logo.ico">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .algo-grid {
+      grid-template-columns: repeat(3, 1fr) !important;
+    }
+    @media (max-width: 700px) {
+      .algo-grid { grid-template-columns: repeat(2, 1fr) !important; }
+    }
+    @media (max-width: 420px) {
+      .algo-grid { grid-template-columns: 1fr !important; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-brand">
+    <div class="dot"></div>
+    ML Manual Calculator
+  </div>
+  <div class="breadcrumb">
+    <span class="active-crumb">Beranda</span>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="home-hero">
+    <div class="tag">MANUAL CALCULATION TOOL</div>
+    <h1>Algoritma<br><strong>Machine Learning</strong></h1>
+    <p>
+      Pilih algoritma, upload dataset CSV, dan lihat seluruh proses
+      perhitungan manual step-by-step secara otomatis.
+    </p>
+  </div>
+
+  <div class="algo-grid">
+
+    <a class="algo-card" href="Html/naive_bayes.html">
+      <div class="algo-icon">&#9670;</div>
+      <div class="algo-name">Naive Bayes</div>
+      <div class="algo-desc">Klasifikasi probabilistik berbasis Teorema Bayes dengan Laplace Smoothing</div>
+      <div class="algo-badge badge-available">TERSEDIA</div>
+    </a>
+
+    <a class="algo-card" href="Html/k_means.html">
+      <div class="algo-icon">&#9632;</div>
+      <div class="algo-name">K-Means</div>
+      <div class="algo-desc">Clustering berbasis centroid dengan iterasi konvergensi</div>
+      <div class="algo-badge badge-available">TERSEDIA</div>
+    </a>
+
+    <a class="algo-card" href="Html/c45.html">
+      <div class="algo-icon">&#9650;</div>
+      <div class="algo-name">C4.5</div>
+      <div class="algo-desc">Decision tree dengan entropy, information gain, dan gain ratio</div>
+      <div class="algo-badge badge-available">TERSEDIA</div>
+    </a>
+
+    <a class="algo-card" href="Html/knn.html">
+      <div class="algo-icon">&#9633;</div>
+      <div class="algo-name">K-NN</div>
+      <div class="algo-desc">Klasifikasi berbasis jarak (Euclidean, Manhattan, Minkowski) dengan normalisasi dan voting</div>
+      <div class="algo-badge badge-available">TERSEDIA</div>
+    </a>
+
+    <a class="algo-card" href="Html/linear_regression.html">
+      <div class="algo-icon">&#9135;</div>
+      <div class="algo-name">Linear Regression</div>
+      <div class="algo-desc">Regresi linear sederhana &amp; berganda dengan OLS, Ridge, dan Lasso</div>
+      <div class="algo-badge badge-available">TERSEDIA</div>
+    </a>
+
+    <a class="algo-card" href="Html/apriori.html">
+      <div class="algo-icon">&#10070;</div>
+      <div class="algo-name">Apriori</div>
+      <div class="algo-desc">Association rule mining dengan support, confidence, dan lift berbasis frequent itemsets</div>
+      <div class="algo-badge badge-available">TERSEDIA</div>
+    </a>
+
+  </div>
+</div>
+
+</body>
+</html>
