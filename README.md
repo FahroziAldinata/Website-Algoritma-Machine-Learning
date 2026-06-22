@@ -10,7 +10,7 @@ Cocok untuk mahasiswa, pengajar, dan siapa pun yang ingin memahami cara kerja al
 
 ### Beranda
 
-![Beranda](images/Screenshot.jpg)
+![Beranda](Images/Screenshot.jpg)
 
 Pilih salah satu dari enam algoritma yang tersedia. Setiap kartu menampilkan nama algoritma, deskripsi singkat, dan status ketersediaan.
 
@@ -18,7 +18,7 @@ Pilih salah satu dari enam algoritma yang tersedia. Setiap kartu menampilkan nam
 
 ### Upload Dataset
 
-![Upload Dataset](images/upload.jpg)
+![Upload Dataset](Images/upload.jpg)
 
 Setiap halaman algoritma memiliki zona upload CSV dengan:
 - **Drag & drop** atau klik untuk memilih file
@@ -30,7 +30,7 @@ Setiap halaman algoritma memiliki zona upload CSV dengan:
 
 ### Hasil Proses
 
-![Hasil Proses](images/Result.jpg)
+![Hasil Proses](Images/Result.jpg)
 
 Setelah diproses, hasil ditampilkan secara lengkap:
 - Metrik evaluasi (akurasi, F1, R², dan lain-lain)
@@ -49,19 +49,19 @@ Setiap algoritma menghasilkan file Excel multi-sheet. Tersedia dua mode:
 
 ### Sheet Dataset
 
-![Sheet Dataset](images/Sheet1.jpg)
+![Sheet Dataset](Images/Sheet1.jpg)
 
 Berisi data mentah yang digunakan, diberi label **TRAIN** atau **TEST** per baris, serta informasi metode split.
 
 ### Sheet Perhitungan
 
-![Sheet Perhitungan](images/Perhitungan.jpg)
+![Sheet Perhitungan](Images/Perhitungan.jpg)
 
 Langkah-langkah kalkulasi koefisien, entropy, jarak, atau iterasi centroid — tergantung algoritma. Versi formula merujuk antar sel secara berantai.
 
 ### Sheet Prediksi
 
-![Sheet Prediksi](images/Prediksi.jpg)
+![Sheet Prediksi](Images/Prediksi.jpg)
 
 Tabel seluruh data dengan kolom nilai aktual, nilai prediksi (ŷ), residual, dan status benar/salah.
 
