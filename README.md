@@ -18,7 +18,7 @@ Pilih salah satu dari enam algoritma yang tersedia. Setiap kartu menampilkan nam
 
 ### Upload Dataset
 
-![Upload Dataset](Images/upload.jpg)
+![Upload Dataset](Images/Upload.jpg)
 
 Setiap halaman algoritma memiliki zona upload CSV dengan:
 - **Drag & drop** atau klik untuk memilih file
@@ -67,7 +67,7 @@ Tabel seluruh data dengan kolom nilai aktual, nilai prediksi (ŷ), residual, dan
 
 ### Sheet Evaluasi
 
-![Sheet Evaluasi](images/Evluasi.jpg)
+![Sheet Evaluasi](images/Evaluasi.jpg)
 
 Metrik evaluasi lengkap (R², MSE, RMSE, MAE, Precision, Recall, F1, Confusion Matrix) untuk training set dan test set secara berdampingan.
 
