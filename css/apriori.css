@@ -1,0 +1,101 @@
+/* ============================================================
+   apriori.css — Styles specific to the Apriori page
+   ============================================================ */
+
+/* ---- Item Chip ---- */
+.item-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 12px;
+  background: rgba(79,156,249,0.12);
+  border: 1px solid rgba(79,156,249,0.25);
+  color: var(--accent);
+  font-family: var(--mono);
+  font-size: 16px;
+  white-space: nowrap;
+}
+
+/* ---- Itemset Label ---- */
+.itemset-label {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: rgba(79,156,249,0.08);
+  border: 1px solid rgba(79,156,249,0.2);
+  color: var(--accent);
+  font-family: var(--mono);
+  font-size: 16px;
+  white-space: nowrap;
+}
+
+/* ---- Frequent Badge ---- */
+.freq-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 12px;
+  border-radius: 20px;
+  background: rgba(52,211,153,0.08);
+  border: 1px solid rgba(52,211,153,0.25);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 16px;
+}
+.freq-badge .freq-supp {
+  color: var(--green);
+  font-weight: 600;
+  font-size: 15px;
+}
+
+/* ---- Param Block ---- */
+.param-block {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1rem 1.25rem;
+}
+.param-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.param-badge {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+/* ---- Upload drag state ---- */
+.upload-zone.drag-over {
+  border-color: var(--accent);
+  background: rgba(79,156,249,0.08);
+}
+
+/* ---- Rule row highlight ---- */
+.rule-top td {
+  background: rgba(52,211,153,0.04);
+}
+
+/* ---- Apriori result section spacing ---- */
+#result-content .section {
+  animation: fadeIn 0.3s ease both;
+}
+#result-content .section:nth-child(1) { animation-delay: 0s; }
+#result-content .section:nth-child(2) { animation-delay: 0.05s; }
+#result-content .section:nth-child(3) { animation-delay: 0.10s; }
+#result-content .section:nth-child(4) { animation-delay: 0.15s; }
+#result-content .section:nth-child(5) { animation-delay: 0.20s; }
+#result-content .section:nth-child(6) { animation-delay: 0.25s; }
+#result-content .section:nth-child(7) { animation-delay: 0.30s; }
