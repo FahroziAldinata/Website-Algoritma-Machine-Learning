@@ -1,0 +1,116 @@
+/* =============================================================
+   src/styles/tables.css
+   Table Styles — Standard Tables, Scrollable Tables,
+   Sticky Headers, Row Highlights, Monospace Numbers.
+   ============================================================= */
+
+/* ============================================================
+   TABLE WRAPPERS
+   ============================================================ */
+
+/* Standard horizontal-scroll wrapper */
+.tbl-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Constrained height + both-axis scroll (e.g. likelihood tables) */
+.tbl-wrap-scroll {
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: 280px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+/* Sticky header for scrollable tables */
+.tbl-wrap-scroll table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--bg3);
+}
+
+/* ============================================================
+   BASE TABLE
+   ============================================================ */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+/* ---- Table Header ---- */
+th {
+  text-align: left;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text2);
+  font-weight: 500;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  background: var(--bg);
+  white-space: nowrap;
+}
+
+/* ---- Table Data Cell ---- */
+td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+/* ---- Last Row: no bottom border ---- */
+tr:last-child td {
+  border-bottom: none;
+}
+
+/* ---- Highlighted Row ---- */
+tr.row-hl td {
+  background: rgba(79, 156, 249, 0.06);
+}
+
+/* ---- Neighbor row (KNN) ---- */
+tr.row-neighbor td {
+  background: rgba(52, 211, 153, 0.05);
+}
+
+/* ---- Correct prediction row ---- */
+tr.row-correct td:first-child {
+  border-left: 2px solid var(--green);
+}
+
+/* ---- Incorrect prediction row ---- */
+tr.row-wrong td:first-child {
+  border-left: 2px solid var(--red);
+}
+
+/* ---- Numeric monospace cell ---- */
+td.num,
+td.mono {
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+/* ============================================================
+   CONFUSION MATRIX — Diagonal cell highlighting
+   ============================================================ */
+td.cm-diag {
+  background: rgba(52, 211, 153, 0.08);
+  color: var(--green);
+  font-weight: 600;
+}
+
+/* ============================================================
+   DATASET PREVIEW TABLE — Summary Stats
+   ============================================================ */
+.dataset-preview-table td,
+.dataset-preview-table th {
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

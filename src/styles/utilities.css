@@ -1,0 +1,191 @@
+/* =============================================================
+   src/styles/utilities.css
+   Utility Classes — Buttons, Chips, Badges, Typography Utils,
+   Animations, Spacing Helpers, Text Colors, Display Helpers.
+   ============================================================= */
+
+/* ============================================================
+   BUTTONS
+   ============================================================ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 18px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border2);
+  background: var(--bg3);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, transform 0.1s;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.btn:hover {
+  background: var(--bg4);
+  border-color: var(--border2);
+}
+
+.btn:active {
+  transform: scale(0.98);
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* ---- Button Variants ---- */
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+  border-color: transparent;
+}
+
+.btn-primary:hover {
+  background: #3a88e8;
+}
+
+.btn-green {
+  background: rgba(52, 211, 153, 0.15);
+  color: var(--green);
+  border-color: rgba(52, 211, 153, 0.35);
+}
+
+.btn-green:hover {
+  background: rgba(52, 211, 153, 0.25);
+}
+
+.btn-danger {
+  background: rgba(248, 113, 113, 0.15);
+  color: var(--red);
+  border-color: rgba(248, 113, 113, 0.35);
+}
+
+.btn-danger:hover {
+  background: rgba(248, 113, 113, 0.25);
+}
+
+/* ---- Size Variants ---- */
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 12px;
+}
+
+.btn-lg {
+  padding: 12px 24px;
+  font-size: 16px;
+}
+
+/* ============================================================
+   CHIPS / STATUS BADGES
+   ============================================================ */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  padding: 3px 8px;
+  border-radius: 10px;
+  font-weight: 500;
+}
+
+.chip-ok   { background: var(--green-bg); color: var(--green); }
+.chip-fail { background: var(--red-bg);   color: var(--red); }
+.chip-warn { background: var(--yellow-bg); color: var(--yellow); }
+.chip-info { background: rgba(79,156,249,0.12); color: var(--accent); }
+
+/* ============================================================
+   MONOSPACE TEXT UTILITY
+   ============================================================ */
+.mono {
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+/* ============================================================
+   TEXT COLOR UTILITIES
+   ============================================================ */
+.text-accent  { color: var(--accent); }
+.text-green   { color: var(--green); }
+.text-red     { color: var(--red); }
+.text-yellow  { color: var(--yellow); }
+.text-muted   { color: var(--text2); }
+.text-subtle  { color: var(--text3); }
+
+/* ============================================================
+   DISPLAY / SPACING UTILITIES
+   ============================================================ */
+.flex        { display: flex; }
+.flex-col    { flex-direction: column; }
+.items-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+.gap-sm      { gap: 6px; }
+.gap-md      { gap: 12px; }
+.gap-lg      { gap: 20px; }
+.mt-sm       { margin-top: 0.5rem; }
+.mt-md       { margin-top: 1rem; }
+.mt-lg       { margin-top: 2rem; }
+.mb-sm       { margin-bottom: 0.5rem; }
+.mb-md       { margin-bottom: 1rem; }
+.w-full      { width: 100%; }
+.hidden      { display: none !important; }
+
+/* ============================================================
+   ANIMATIONS
+   ============================================================ */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes fadeInFast {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease both;
+}
+
+.animate-fade-in-fast {
+  animation: fadeInFast 0.2s ease both;
+}
+
+/* ============================================================
+   TRUNCATE TEXT
+   ============================================================ */
+.truncate {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ============================================================
+   BORDER RADIUS UTILITIES
+   ============================================================ */
+.rounded    { border-radius: var(--radius); }
+.rounded-lg { border-radius: var(--radius-lg); }
+.rounded-full { border-radius: 9999px; }

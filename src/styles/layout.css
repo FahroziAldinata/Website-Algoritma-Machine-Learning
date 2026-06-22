@@ -1,0 +1,433 @@
+/* =============================================================
+   src/styles/layout.css
+   SPA Shell Layout — Sidebar, Main Content, TopNav, Breadcrumb,
+   Workspace Container, Preprocess Grid, Split Slider Layout,
+   Action Header, Loading Overlay.
+   ============================================================= */
+
+/* ============================================================
+   SPA WRAPPER — Root Flex Container
+   ============================================================ */
+.spa-wrapper {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* ============================================================
+   SIDEBAR NAVIGATION
+   ============================================================ */
+.sidebar {
+  width: 260px;
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  z-index: 10;
+  overflow-y: auto;
+}
+
+/* ---- Sidebar Brand / Logo ---- */
+.sidebar-brand {
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text);
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.sidebar-brand .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
+  flex-shrink: 0;
+}
+
+/* ---- Sidebar Menu List ---- */
+.sidebar-menu {
+  list-style: none;
+  padding: 1rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex-grow: 1;
+  overflow-y: auto;
+}
+
+/* ---- Sidebar Menu Item ---- */
+.sidebar-item a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 1.5rem;
+  color: var(--text2);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background var(--transition), color var(--transition), border-color var(--transition);
+  border-left: 3px solid transparent;
+}
+
+.sidebar-item a:hover {
+  background: var(--bg3);
+  color: var(--text);
+  border-left-color: var(--border2);
+}
+
+.sidebar-item.active a {
+  background: rgba(79, 156, 249, 0.08);
+  color: var(--accent);
+  border-left-color: var(--accent);
+  font-weight: 600;
+}
+
+.sidebar-icon {
+  font-size: 16px;
+  color: var(--accent);
+  width: 20px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+/* ============================================================
+   MAIN CONTENT AREA
+   ============================================================ */
+.main-content {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  min-width: 0;
+}
+
+/* ============================================================
+   TOP NAVIGATION BAR
+   ============================================================ */
+.top-nav {
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  padding: 0 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 60px;
+  flex-shrink: 0;
+}
+
+/* ============================================================
+   BREADCRUMB
+   ============================================================ */
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-family: var(--mono);
+  color: var(--text3);
+}
+
+.breadcrumb .crumb {
+  cursor: pointer;
+  color: var(--text2);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.breadcrumb .crumb:hover {
+  color: var(--accent);
+}
+
+.breadcrumb .sep {
+  color: var(--border2);
+}
+
+.breadcrumb .active-crumb {
+  color: var(--text);
+  pointer-events: none;
+}
+
+/* ============================================================
+   SPA CONTAINER — Workspace Content Wrapper
+   ============================================================ */
+.spa-container {
+  padding: 2rem;
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  flex-grow: 1;
+}
+
+/* ============================================================
+   LEGACY NAV (untuk kompatibilitas halaman lama)
+   ============================================================ */
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  padding: 0 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 60px;
+}
+
+.nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--text);
+  letter-spacing: 0.03em;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.nav-brand .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
+}
+
+.container {
+  max-width: 90%;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem;
+}
+
+/* ============================================================
+   PREPROCESS GRID — Kolom Target & Split Side-by-Side
+   ============================================================ */
+.preprocess-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+@media (max-width: 900px) {
+  .preprocess-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---- Split Panel Right Border ---- */
+.split-panel {
+  border-left: 1px solid var(--border);
+  padding-left: 1.5rem;
+}
+
+/* ============================================================
+   SPLIT SLIDER — Train/Test Ratio Visual
+   ============================================================ */
+.split-slider-container {
+  margin-top: 0.75rem;
+}
+
+.split-slider-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--text2);
+  margin-bottom: 0.25rem;
+}
+
+.split-slider-input {
+  width: 100%;
+  background: var(--bg3);
+  height: 6px;
+  border-radius: 3px;
+  outline: none;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.split-slider-input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  box-shadow: 0 0 6px var(--accent);
+}
+
+.split-visual-bar {
+  display: flex;
+  height: 14px;
+  border-radius: 7px;
+  overflow: hidden;
+  margin-top: 10px;
+  border: 1px solid var(--border);
+}
+
+.split-bar-part {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  font-family: var(--mono);
+  font-weight: bold;
+  color: white;
+  transition: width 0.15s ease;
+}
+
+.split-train-part { background: var(--accent2); }
+.split-test-part  { background: var(--border2); }
+
+/* ============================================================
+   ACTION HEADER — Baris aksi dengan label kiri & tombol kanan
+   ============================================================ */
+.action-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* ---- Column Selector Action Buttons Row ---- */
+.col-sel-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 0.75rem;
+}
+
+/* ============================================================
+   LOADING OVERLAY — Fullscreen Progress Indicator
+   ============================================================ */
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 17, 23, 0.85);
+  backdrop-filter: blur(4px);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+
+.loading-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.loader-box {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  padding: 2rem;
+  border-radius: var(--radius-lg);
+  width: 90%;
+  max-width: 450px;
+  text-align: center;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+}
+
+.loader-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 1.25rem;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loader-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--text);
+}
+
+.loader-msg {
+  font-size: 14px;
+  color: var(--text2);
+  margin-bottom: 1.5rem;
+  min-height: 20px;
+}
+
+.progress-bar-bg {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  height: 8px;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+
+.progress-bar-fill {
+  background: var(--accent);
+  height: 100%;
+  width: 0%;
+  transition: width 0.1s ease;
+}
+
+.progress-pct {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--accent);
+  font-weight: 500;
+}
+
+/* ============================================================
+   PAGE FOOTER — Baris tombol aksi di bawah workspace
+   ============================================================ */
+.page-footer {
+  margin-top: 2rem;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  margin-bottom: 2rem;
+}
+
+/* ============================================================
+   RESPONSIVE BREAKPOINTS
+   ============================================================ */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 220px;
+  }
+  .spa-container {
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .spa-wrapper {
+    flex-direction: column;
+  }
+  .sidebar {
+    width: 100%;
+    height: auto;
+    position: relative;
+  }
+}

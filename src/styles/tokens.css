@@ -1,0 +1,47 @@
+/* =============================================================
+   src/styles/tokens.css
+   Design Tokens — CSS Custom Properties (Variables)
+   
+   Semua nilai desain terpusat di sini. Tidak ada selector
+   atau rule lain di file ini, hanya :root {}.
+   ============================================================= */
+
+:root {
+  /* ---- Background Palette ---- */
+  --bg:         #0f1117;   /* Surface paling gelap — body background */
+  --bg2:        #171b26;   /* Surface kartu/panel */
+  --bg3:        #1e2333;   /* Surface input, header tabel */
+  --bg4:        #252b3b;   /* Surface hover, disabled state */
+
+  /* ---- Border Palette ---- */
+  --border:     #2e3548;   /* Border standar */
+  --border2:    #3d4561;   /* Border aktif / hover */
+
+  /* ---- Text Palette ---- */
+  --text:       #e8ecf4;   /* Teks utama */
+  --text2:      #8892a8;   /* Teks sekunder / label */
+  --text3:      #5a6275;   /* Teks tersier / placeholder / hint */
+
+  /* ---- Accent / Brand ---- */
+  --accent:     #4f9cf9;   /* Biru utama — link, highlight, active */
+  --accent2:    #2d6fd4;   /* Biru lebih gelap — hover accent */
+
+  /* ---- Semantic Colors ---- */
+  --green:      #34d399;   /* Sukses / benar */
+  --green-bg:   #0d2d22;   /* Background sukses */
+  --red:        #f87171;   /* Error / salah */
+  --red-bg:     #2d0f0f;   /* Background error */
+  --yellow:     #fbbf24;   /* Warning / perhatian */
+  --yellow-bg:  #2a1e07;   /* Background warning */
+
+  /* ---- Typography ---- */
+  --mono:       'IBM Plex Mono', 'Courier New', monospace;
+  --sans:       'IBM Plex Sans', 'Segoe UI', sans-serif;
+
+  /* ---- Spacing & Shape ---- */
+  --radius:     8px;       /* Border radius standar */
+  --radius-lg:  12px;      /* Border radius besar (kartu, modal) */
+
+  /* ---- Transition ---- */
+  --transition: 0.2s ease;
+}

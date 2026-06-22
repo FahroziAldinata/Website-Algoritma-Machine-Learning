@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ML Manual Calculator — SPA Platform</title>
+  <meta name="description" content="Platform pembelajaran algoritma Machine Learning secara transparan — hitung manual step-by-step, visualisasi, dan ekspor Excel formula.">
+  <link rel="icon" type="image/x-icon" href="src/assets/logo.ico">
+  <link rel="stylesheet" href="src/vendor/fonts.css">
+  <link rel="stylesheet" href="src/styles/main.css">
+</head>
+<body>
+
+<div class="spa-wrapper">
+  
+  <!-- SIDEBAR NAVIGATION -->
+  <aside class="sidebar">
+    <div class="sidebar-brand" id="sidebar-home-btn">
+      <div class="dot"></div>
+      <span>ML Calculator SPA</span>
+    </div>
+    <ul class="sidebar-menu" id="sidebar-menu">
+      <li class="sidebar-item sidebar-item-home active">
+        <a href="#" data-plugin-id="home">
+          <span class="sidebar-icon">&#9670;</span>
+          <span class="sidebar-text">Beranda</span>
+        </a>
+      </li>
+      <!-- Menu plugin algoritma akan dimuat secara dinamis oleh core_ui.js -->
+    </ul>
+  </aside>
+
+  <!-- MAIN CONTENT AREA -->
+  <main class="main-content">
+    
+    <!-- TOP BAR NAV -->
+    <header class="top-nav">
+      <nav class="breadcrumb" aria-label="Breadcrumb navigasi">
+        <span class="crumb" id="crumb-home">Beranda</span>
+        <span class="sep" id="crumb-sep" hidden>/</span>
+        <span class="active-crumb" id="crumb-active" hidden>Algoritma</span>
+      </nav>
+    </header>
+
+    <!-- CONTENT WRAPPER -->
+    <div class="spa-container">
+
+      <!-- ========================================== -->
+      <!-- SECTION 1: HOME (BERANDA)                  -->
+      <!-- ========================================== -->
+      <section id="home-section">
+        <div class="home-hero">
+          <div class="tag">MANUAL CALCULATION TOOL</div>
+          <h1>Algoritma <strong>Machine Learning</strong></h1>
+          <p>
+            Pilih algoritma di bawah ini atau di sidebar, upload dataset CSV Anda, 
+            dan lihat seluruh proses perhitungan manual step-by-step secara visual.
+          </p>
+        </div>
+        <div class="algo-grid" id="algo-cards-grid">
+          <!-- Kartu algoritma akan dimuat secara dinamis -->
+        </div>
+      </section>
+
+      <!-- ========================================== -->
+      <!-- SECTION 2: WORKSPACE ALGORITMA             -->
+      <!-- ========================================== -->
+      <section id="workspace-section" hidden>
+        
+        <!-- Header Algoritma -->
+        <div class="home-hero workspace-header">
+          <h1 id="current-algo-title">Algoritma</h1>
+          <p id="current-algo-desc"></p>
+        </div>
+
+        <!-- STEP 1: DATASET UPLOAD & PREPROCESSING -->
+        <div class="section">
+          <div class="section-head">
+            <div class="step-circle">1</div>
+            <div class="section-title">Upload Dataset &amp; Prapemrosesan Data</div>
+          </div>
+          <div class="section-body">
+            
+            <!-- Drag & Drop Zone -->
+            <label for="csv-input" class="upload-zone" id="drop-zone">
+              <span class="up-icon">&#8682;</span>
+              <span class="up-title">Seret file CSV ke sini atau klik untuk memilih file</span>
+              <span class="up-sub">Mendukung berkas data terformat tanda koma (CSV)</span>
+              <input type="file" id="csv-input" accept=".csv">
+            </label>
+
+            <!-- Preview & Setup (Akan muncul setelah file dimuat) -->
+            <div id="preview-section" hidden>
+              
+              <!-- Preview Dataset Header & Table -->
+              <div class="action-header mt-md">
+                <h3 class="sub-title">Pratinjau Data (Maksimal 8 Baris Pertama)</h3>
+                <span id="preview-info" class="mono text-muted"></span>
+              </div>
+              <div class="tbl-wrap mb-md">
+                <table id="preview-table"></table>
+              </div>
+
+              <!-- Column Selector & Splitting Setup Grid -->
+              <div class="preprocess-grid">
+                
+                <!-- Kiri: Feature Selector -->
+                <div>
+                  <h3 class="sub-title">Pilih Fitur (Feature Columns)</h3>
+                  <div class="col-sel-actions">
+                    <button class="btn btn-sm" id="btn-select-all-cols">Pilih Semua</button>
+                    <button class="btn btn-sm" id="btn-clear-all-cols">Bersihkan</button>
+                  </div>
+                  <div id="col-checkboxes" class="col-pill-wrap">
+                    <!-- Checkbox kolom dimuat dinamis -->
+                  </div>
+                  <div id="col-selector-warn" class="mt-sm"></div>
+                </div>
+
+                <!-- Kanan: Splitting & Imputasi -->
+                <div class="split-panel">
+                  <h3 class="sub-title">Target &amp; Partisi Data</h3>
+                  
+                  <div class="form-group mb-md">
+                    <label for="class-col-select">Kolom Target / Kelas (ŷ)</label>
+                    <select id="class-col-select"></select>
+                  </div>
+
+                  <div class="form-group mb-md">
+                    <label for="mv-strategy-select">Strategi Nilai Kosong</label>
+                    <select id="mv-strategy-select">
+                      <option value="mode" selected>Imputasi Modus (Kategoris/Numerik)</option>
+                      <option value="median">Imputasi Median (Numerik) / Modus</option>
+                      <option value="drop">Buang Baris Tidak Lengkap (Drop)</option>
+                    </select>
+                  </div>
+
+                  <div class="form-group mb-md">
+                    <label for="split-method-select">Metode Partisi Data</label>
+                    <select id="split-method-select">
+                      <option value="random" selected>Random Split LCG (Train &amp; Test)</option>
+                      <option value="stratified">Stratified Split LCG (Klasifikasi)</option>
+                      <option value="linear">Linear Split Sistematis (Regresi)</option>
+                      <option value="none">Tanpa Split (Gunakan Seluruh Data)</option>
+                    </select>
+                  </div>
+
+                  <!-- Split Slider Controls -->
+                  <div class="form-group split-slider-container" id="split-slider-group">
+                    <div class="split-slider-header">
+                      <span>Rasio Data Training: <strong id="split-label-train">80%</strong></span>
+                      <span>Rasio Data Testing: <strong id="split-label-test">20%</strong></span>
+                    </div>
+                    <input type="range" id="split-slider" class="split-slider-input" min="10" max="90" value="80">
+                    <div class="split-visual-bar">
+                      <div class="split-bar-part split-train-part" id="split-bar-train" style="width: 80%;">
+                        <span id="split-label-train-bar">80%</span>
+                      </div>
+                      <div class="split-bar-part split-test-part" id="split-bar-test" style="width: 20%;">
+                        <span id="split-label-test-bar">20%</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Random Seed Setup & Est Rows -->
+                  <div class="form-group mt-md">
+                    <label for="split-seed-input">Random Seed (LCG)</label>
+                    <input type="number" id="split-seed-input" value="42" style="width: 100px;">
+                  </div>
+
+                  <div class="mono text-muted mt-sm" id="split-est-rows" style="font-size: 11px; text-align: right;">
+                    ≈ 0 train / 0 test
+                  </div>
+
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+
+        <!-- STEP 2: ALGORITHM HYPERPARAMETERS -->
+        <div class="section">
+          <div class="section-head">
+            <div class="step-circle">2</div>
+            <div class="section-title">Konfigurasi Parameter Model</div>
+          </div>
+          <div class="section-body">
+            <div id="dynamic-config-form">
+              <!-- Dibuat secara dinamis berdasarkan AlgorithmPlugin.configSchema -->
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 3: RUN PROCESS -->
+        <div class="page-footer">
+          <button class="btn btn-primary btn-lg" id="btn-run-model">
+            <span>&#9654;</span> Mulai Perhitungan Model
+          </button>
+        </div>
+
+        <!-- RESULT PANEL -->
+        <div class="section" id="result-section" hidden>
+          <div class="section-head">
+            <div class="step-circle">&#10003;</div>
+            <div class="section-title">Hasil Perhitungan Manual Step-by-Step</div>
+          </div>
+          <div class="section-body">
+            
+            <!-- Export Row -->
+            <div class="action-header">
+              <span class="mono text-subtle" style="font-size: 11px;">Kalkulasi selesai. Anda dapat mengekspor worksheet Excel yang berisi rantai formula sel dinamis.</span>
+              <div class="flex gap-sm">
+                <button class="btn btn-green btn-sm" id="btn-export-plain">
+                  <span>&#10515;</span> Ekspor Excel (Plain)
+                </button>
+                <button class="btn btn-green btn-sm" id="btn-export-formula">
+                  <span>&#10515;</span> Ekspor Excel (Formula)
+                </button>
+              </div>
+            </div>
+
+            <hr class="divider">
+
+            <!-- Dynamic Result Area -->
+            <div id="result-container">
+              <!-- Render HTML hasil plugin dimuat di sini -->
+            </div>
+
+          </div>
+        </div>
+
+      </section>
+
+    </div>
+
+  </main>
+</div>
+
+<!-- FULLSCREEN LOADING OVERLAY -->
+<div class="loading-overlay" id="loading-overlay" role="dialog" aria-modal="true" aria-label="Memproses model">
+  <div class="loader-box">
+    <div class="loader-spinner" role="progressbar"></div>
+    <div class="loader-title" id="loader-title">Memproses Model</div>
+    <div class="loader-msg" id="loader-msg">Silakan tunggu...</div>
+    <div class="progress-bar-bg">
+      <div class="progress-bar-fill" id="progress-bar-fill"></div>
+    </div>
+    <div class="progress-pct" id="progress-pct">0%</div>
+    <button class="btn btn-danger mt-md" id="btn-cancel-calc">
+      Batalkan Perhitungan
+    </button>
+  </div>
+</div>
+
+<!-- ========================================== -->
+<!-- SCRIPTS LOADING SECTION                    -->
+<!-- ========================================== -->
+
+<!-- Vendor Libraries -->
+<script src="src/vendor/xlsx.full.min.js"></script>
+
+<!-- Shared Modules -->
+<script src="src/shared/lcg.js"></script>
+<script src="src/shared/pipeline.js"></script>
+<script src="src/shared/sanitizer.js"></script>
+<script src="src/shared/export_helper.js"></script>
+<script src="src/shared/worker_factory.js"></script>
+
+<!-- Core Architecture Modules -->
+<script src="src/core/algorithm_interface.js"></script>
+<script src="src/core/registry.js"></script>
+<script src="src/core/state_manager.js"></script>
+<script src="src/core/dom_helper.js"></script>
+
+<!-- Algorithm Plugins (Akan register ke registry saat diparse) -->
+<script src="src/plugins/naive_bayes/naive_bayes_plugin.js"></script>
+<script src="src/plugins/kmeans/kmeans_plugin.js"></script>
+<script src="src/plugins/c45/c45_plugin.js"></script>
+<script src="src/plugins/knn/knn_plugin.js"></script>
+<script src="src/plugins/regression/regression_plugin.js"></script>
+<script src="src/plugins/apriori/apriori_plugin.js"></script>
+
+<!-- Main UI App Controller -->
+<script src="src/core/core_ui.js"></script>
+
+</body>
+</html>

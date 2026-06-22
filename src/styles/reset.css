@@ -1,0 +1,64 @@
+/* =============================================================
+   src/styles/reset.css
+   Base Reset, Body, dan Scrollbar
+   ============================================================= */
+
+/* ---- Universal Box-Sizing Reset ---- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ---- HTML Base ---- */
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* ---- Body ---- */
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  font-size: 16px;
+  line-height: 1.6;
+  display: block;
+}
+
+/* ---- Scrollbar Styling (WebKit) ---- */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border2);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text3);
+}
+
+/* ---- Anchor Reset ---- */
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* ---- List Reset ---- */
+ul,
+ol {
+  list-style: none;
+}
+
+/* ---- Image ---- */
+img {
+  max-width: 100%;
+  display: block;
+}

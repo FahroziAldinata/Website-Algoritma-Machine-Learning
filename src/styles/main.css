@@ -1,0 +1,21 @@
+/* =============================================================
+   src/styles/main.css
+   Entry Point — Mengimpor semua partial stylesheet secara berurutan.
+   
+   URUTAN IMPORT KRITIS:
+   1. tokens.css    — CSS Variables harus pertama agar bisa digunakan semua file
+   2. reset.css     — Base reset harus sebelum komponen
+   3. layout.css    — Struktur shell sebelum komponen isi
+   4. components.css — Komponen UI utama
+   5. forms.css     — Elemen form
+   6. tables.css    — Tabel dan wrapper
+   7. utilities.css — Helper terakhir agar bisa override jika perlu
+   ============================================================= */
+
+@import url('./tokens.css');
+@import url('./reset.css');
+@import url('./layout.css');
+@import url('./components.css');
+@import url('./forms.css');
+@import url('./tables.css');
+@import url('./utilities.css');
