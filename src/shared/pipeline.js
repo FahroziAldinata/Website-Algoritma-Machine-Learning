@@ -102,6 +102,74 @@ function cleanData(rows, headers, strategy) {
     colTypes[h] = isNum ? 'num' : 'cat';
   });
 
+  // Jika ffill atau interpolate, pastikan baris pertama tidak kosong untuk ffill (fallback ke nol atau backward fill)
+  if (strategy === 'ffill' || strategy === 'interpolate') {
+    // Implementasi khusus Time-Series
+    const cleanRows = [...rows];
+    const report = { totalRows: rows.length, droppedRows: 0, imputedValues: 0, imputedDetails: {} };
+    headers.forEach(h => report.imputedDetails[h] = 0);
+
+    headers.forEach(h => {
+      let lastVal = null;
+      for (let i = 0; i < cleanRows.length; i++) {
+        let v = cleanRows[i][h];
+        if (v === '' || v == null) {
+          if (strategy === 'ffill') {
+            // Jika di awal kosong, cari ke depan (bfill)
+            if (lastVal === null) {
+              for (let j = i + 1; j < cleanRows.length; j++) {
+                if (cleanRows[j][h] !== '' && cleanRows[j][h] != null) {
+                  lastVal = cleanRows[j][h];
+                  break;
+                }
+              }
+              if (lastVal === null) lastVal = colTypes[h] === 'num' ? 0 : ""; // Fallback ekstrim
+            }
+            cleanRows[i] = { ...cleanRows[i], [h]: lastVal };
+            report.imputedValues++;
+            report.imputedDetails[h]++;
+          } else if (strategy === 'interpolate' && colTypes[h] === 'num') {
+            // Linear Interpolation
+            let prevIdx = i - 1;
+            let nextIdx = i + 1;
+            let prevVal = prevIdx >= 0 ? parseFloat(cleanRows[prevIdx][h]) : null;
+            let nextVal = null;
+            while (nextIdx < cleanRows.length) {
+              if (cleanRows[nextIdx][h] !== '' && cleanRows[nextIdx][h] != null) {
+                nextVal = parseFloat(cleanRows[nextIdx][h]);
+                break;
+              }
+              nextIdx++;
+            }
+            
+            if (prevVal === null && nextVal !== null) prevVal = nextVal;
+            if (nextVal === null && prevVal !== null) nextVal = prevVal;
+            if (prevVal === null && nextVal === null) { prevVal = 0; nextVal = 0; }
+            
+            const steps = nextIdx - prevIdx;
+            const stepVal = (nextVal - prevVal) / steps;
+            const interpolated = prevVal + (stepVal * (i - prevIdx));
+            
+            cleanRows[i] = { ...cleanRows[i], [h]: String(interpolated) };
+            report.imputedValues++;
+            report.imputedDetails[h]++;
+          } else {
+            // Fallback ffill untuk kategorik jika interpolate
+            if (lastVal !== null) {
+               cleanRows[i] = { ...cleanRows[i], [h]: lastVal };
+               report.imputedValues++;
+               report.imputedDetails[h]++;
+            }
+          }
+        } else {
+          lastVal = v;
+        }
+      }
+    });
+    report.remainingRows = cleanRows.length;
+    return { cleanRows, report, colTypes };
+  }
+
   // Hitung median dan mode untuk imputasi
   const stats = {};
   headers.forEach(h => {
@@ -359,4 +427,27 @@ if (typeof window !== 'undefined') {
   self.splitData = splitData;
   self.getNormalizationStats = getNormalizationStats;
   self.applyNormalization = applyNormalization;
+}
+
+/**
+ * Menyortir data berdasarkan kolom waktu dan mendeteksi frekuensi secara heuristik
+ * @param {Array} rows - Dataset
+ * @param {string} timeCol - Nama kolom waktu
+ * @returns {Array} Dataset yang telah disortir
+ */
+function prepareTimeSeriesData(rows, timeCol) {
+  if (!rows || rows.length === 0) return rows;
+  const sorted = [...rows].sort((a, b) => {
+    const da = new Date(a[timeCol]).getTime();
+    const db = new Date(b[timeCol]).getTime();
+    if (isNaN(da) || isNaN(db)) return 0; // Jika tidak valid, biarkan urutan asli
+    return da - db;
+  });
+  return sorted;
+}
+
+if (typeof window !== 'undefined') {
+  window.prepareTimeSeriesData = prepareTimeSeriesData;
+} else if (typeof self !== 'undefined') {
+  self.prepareTimeSeriesData = prepareTimeSeriesData;
 }

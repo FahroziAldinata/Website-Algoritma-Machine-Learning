@@ -212,6 +212,37 @@ function switchView(viewId) {
     document.getElementById('current-algo-title').innerHTML = `<strong>${plugin.name}</strong>`;
     document.getElementById('current-algo-desc').textContent = plugin.description || '';
     
+    // Sesuaikan Label & Control UI berdasarkan mode algoritma
+    const featureColTitle = document.getElementById('feature-col-title');
+    const targetColLabel = document.getElementById('target-col-label');
+    const splitSliderGroup = document.getElementById('split-slider-group');
+    const splitMethodSelect = document.getElementById('split-method-select');
+    const mvStrategySelect = document.getElementById('mv-strategy-select');
+
+    if (plugin.uiMode === 'forecasting') {
+      if (featureColTitle) featureColTitle.textContent = 'Pilih Kolom Tanggal (Waktu)';
+      if (targetColLabel) targetColLabel.textContent = 'Kolom Nilai Aktual (Target)';
+      if (splitSliderGroup) splitSliderGroup.style.display = 'none'; // Sembunyikan random split
+      if (splitMethodSelect) {
+        splitMethodSelect.value = 'time';
+        splitMethodSelect.disabled = true; // Kunci ke time-based
+      }
+      if (mvStrategySelect && (mvStrategySelect.value === 'mode' || mvStrategySelect.value === 'median')) {
+         mvStrategySelect.value = 'ffill'; // Default untuk time series
+      }
+    } else {
+      if (featureColTitle) featureColTitle.textContent = 'Pilih Fitur (Feature Columns)';
+      if (targetColLabel) targetColLabel.textContent = 'Kolom Target / Kelas (ŷ)';
+      if (splitSliderGroup) splitSliderGroup.style.display = 'block';
+      if (splitMethodSelect) {
+        splitMethodSelect.disabled = false;
+        if (splitMethodSelect.value === 'time') splitMethodSelect.value = 'random';
+      }
+      if (mvStrategySelect && (mvStrategySelect.value === 'ffill' || mvStrategySelect.value === 'interpolate')) {
+         mvStrategySelect.value = 'mode';
+      }
+    }
+
     // Update breadcrumb
     if (sepCrumb) sepCrumb.hidden = false;
     if (activeCrumb) {
@@ -229,9 +260,9 @@ function switchView(viewId) {
     // Reset warnings
     updateValidationWarnings();
 
-    // Reset layout split slider jika dataset dimuat
+    // Sesuaikan ulang pilihan kolom jika dataset sudah dimuat
     if (StateManager.state.rawRows.length > 0) {
-      updateSplitEst();
+      _reAutoSelectColumns(plugin);
     }
   }
 }
@@ -376,13 +407,32 @@ function handleCSVFile(file) {
       StateManager.update('headers', headers);
       StateManager.update('rawRows', rawRows);
       
-      // Pilih kolom kelas (default: kolom terakhir)
-      const defaultClass = headers[headers.length - 1];
-      StateManager.update('classCol', defaultClass);
-      
-      // Pilih seluruh kolom fitur kecuali kolom kelas
-      const defaultFeatures = headers.filter(h => h !== defaultClass);
-      StateManager.update('featureCols', defaultFeatures);
+      // Cek apakah plugin aktif adalah mode forecasting
+      const activePluginId = StateManager.state.activePluginId;
+      const activePlugin = activePluginId ? registry.get(activePluginId) : null;
+      const isForecastingMode = activePlugin && activePlugin.uiMode === 'forecasting';
+
+      if (isForecastingMode) {
+        // --- Mode Forecasting ---
+        // Deteksi kolom tanggal (cari kolom yang sebagian besar nilainya terparsing sebagai tanggal valid)
+        const dateCol = _detectDateColumn(headers, rawRows);
+        
+        // Deteksi kolom numerik pertama (bukan kolom tanggal) sebagai target nilai
+        const numericCols = headers.filter(h => h !== dateCol && rawRows.slice(0, 10).every(r => !isNaN(parseFloat(r[h])) && r[h] !== ''));
+        const defaultTarget = numericCols[0] || headers.find(h => h !== dateCol) || headers[headers.length - 1];
+
+        StateManager.update('classCol', defaultTarget);
+        StateManager.update('featureCols', dateCol ? [dateCol] : []);
+      } else {
+        // --- Mode Classification / Regression (perilaku asli) ---
+        // Pilih kolom kelas (default: kolom terakhir)
+        const defaultClass = headers[headers.length - 1];
+        StateManager.update('classCol', defaultClass);
+        
+        // Pilih seluruh kolom fitur kecuali kolom kelas
+        const defaultFeatures = headers.filter(h => h !== defaultClass);
+        StateManager.update('featureCols', defaultFeatures);
+      }
 
       // Render visual preview
       renderDatasetPreview();
@@ -589,6 +639,11 @@ function updateSplitEst() {
     el.textContent = `≈ ${rows.length} train / 0 test (Tanpa Split)`;
     return;
   }
+  
+  if (splitMethod === 'time') {
+    el.textContent = `≈ ${rows.length} historis (Forecasting)`;
+    return;
+  }
 
   const n = rows.length;
   const nTest = Math.max(1, Math.round(n * testRatio));
@@ -613,9 +668,19 @@ function updateValidationWarnings() {
     return; // Belum upload data, tidak perlu tampilkan warning dulu
   }
 
-  if (featureCols.length === 0) {
-    warnDiv.innerHTML = '<div class="warn-box">&#9888; Pilih setidaknya 1 kolom fitur untuk perhitungan model.</div>';
-    return;
+  const plugin = registry.get(activePluginId);
+  const uiMode = plugin ? plugin.uiMode : 'classification';
+
+  if (uiMode === 'forecasting') {
+    if (featureCols.length !== 1) {
+      warnDiv.innerHTML = '<div class="warn-box">&#9888; Forecasting membutuhkan tepat 1 kolom tanggal/waktu sebagai fitur.</div>';
+      return;
+    }
+  } else {
+    if (featureCols.length === 0) {
+      warnDiv.innerHTML = '<div class="warn-box">&#9888; Pilih setidaknya 1 kolom fitur untuk perhitungan model.</div>';
+      return;
+    }
   }
 
   // Validasi khusus algoritma
@@ -673,7 +738,11 @@ function runActiveModel() {
   // Ekstraksi path plugin (relative ke worker script: src/shared/generic_worker.js)
   // File worker ada di src/shared/generic_worker.js
   // File plugin ada di src/plugins/id/id_plugin.js
-  const pluginPath = `../plugins/${plugin.id}/${plugin.id}_plugin.js`;
+  // Ekstraksi path plugin (relative ke worker script: src/shared/generic_worker.js)
+  // Jika plugin mendefinisikan `pluginFolder`, path-nya disesuaikan (misal: forecasting/sma)
+  // Jika tidak, default ke konvensi lama: plugins/{id}/{id}_plugin.js
+  const pluginFolder = plugin.pluginFolder || plugin.id;
+  const pluginPath = `../plugins/${pluginFolder}/${plugin.id}_plugin.js`;
 
   // Tampilkan loading overlay
   showLoading(true, `Menyiapkan ${plugin.name}...`, 'Melakukan preprocessing data...');
@@ -688,17 +757,35 @@ function runActiveModel() {
     StateManager.update('colTypes', Object.values(colTypes));
 
     // 2. Train/Test Split
-    const { train, test } = splitData(cleanRows, state.classCol, testRatio, splitSeed, splitMethod);
+    // 2. Train/Test Split — Forecasting menggunakan seluruh data historis (tanpa random split)
+    let trainRows, testRows;
+    if (plugin.uiMode === 'forecasting') {
+      // Validasi: Pastikan kolom nilai target adalah numerik
+      const valCol = state.classCol;
+      const nonNumericRows = cleanRows.filter(r => {
+        const v = r[valCol];
+        return v === '' || v == null || isNaN(parseFloat(v));
+      });
+      if (nonNumericRows.length === cleanRows.length) {
+        throw new Error(`Kolom target "${valCol}" tidak mengandung nilai numerik. Pastikan Anda memilih kolom angka (bukan teks/boolean) sebagai "Kolom Nilai Aktual".`);
+      }
+      trainRows = cleanRows;
+      testRows  = [];
+    } else {
+      const split = splitData(cleanRows, state.classCol, testRatio, splitSeed, splitMethod);
+      trainRows = split.train;
+      testRows  = split.test;
+    }
     
-    StateManager.update('trainRows', train);
-    StateManager.update('testRows', test);
+    StateManager.update('trainRows', trainRows);
+    StateManager.update('testRows', testRows);
 
     // 3. Persiapkan payload worker
     const payload = {
       pluginId: plugin.id,
       pluginPath: pluginPath,
-      trainRows: train,
-      testRows: test,
+      trainRows: trainRows,
+      testRows: testRows,
       classCol: state.classCol,
       featureCols: state.featureCols,
       config: config,
@@ -842,3 +929,53 @@ function triggerExport(mode) {
 
 // Event listeners sudah di-bind via addEventListener di initSPA()
 // Tidak perlu mengekspos setAllFeatureCols ke window lagi.
+
+/**
+ * Mendeteksi kolom yang berisi data tanggal/waktu dari header dan baris sampel
+ * @param {Array} headers - Daftar nama kolom
+ * @param {Array} rawRows - Baris sampel dataset
+ * @returns {string|null} Nama kolom tanggal yang terdeteksi, atau null jika tidak ada
+ */
+function _detectDateColumn(headers, rawRows) {
+  const sample = rawRows.slice(0, Math.min(rawRows.length, 10));
+  for (const h of headers) {
+    const validDates = sample.filter(r => {
+      const v = r[h];
+      if (!v || v === '') return false;
+      const d = new Date(v);
+      return !isNaN(d.getTime());
+    });
+    // Jika >60% baris sampel valid sebagai tanggal, anggap kolom ini sebagai kolom waktu
+    if (validDates.length / sample.length >= 0.6) {
+      return h;
+    }
+  }
+  return null;
+}
+
+/**
+ * Menyesuaikan ulang pilihan kolom saat berganti plugin dengan uiMode berbeda
+ * Dipanggil dari switchView() saat data sudah dimuat.
+ * @param {object} plugin - Instance plugin yang baru saja diaktifkan
+ */
+function _reAutoSelectColumns(plugin) {
+  const { headers, rawRows } = StateManager.state;
+  if (!headers || headers.length === 0) return;
+
+  if (plugin.uiMode === 'forecasting') {
+    const dateCol = _detectDateColumn(headers, rawRows);
+    const numericCols = headers.filter(h => h !== dateCol && rawRows.slice(0, 10).every(r => !isNaN(parseFloat(r[h])) && r[h] !== ''));
+    const defaultTarget = numericCols[0] || headers.find(h => h !== dateCol) || headers[headers.length - 1];
+    StateManager.update('classCol', defaultTarget || '');
+    StateManager.update('featureCols', dateCol ? [dateCol] : []);
+  } else {
+    // Reset ke perilaku default classification/regression
+    const defaultClass = headers[headers.length - 1];
+    StateManager.update('classCol', defaultClass);
+    StateManager.update('featureCols', headers.filter(h => h !== defaultClass));
+  }
+
+  renderDatasetPreview();
+  updateSplitEst();
+  updateValidationWarnings();
+}

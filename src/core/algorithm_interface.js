@@ -14,6 +14,9 @@ class AlgorithmPlugin {
   /** @type {string} Nama algoritma yang ditampilkan di UI */
   name;
   
+  /** @type {string} Mode UI algoritma ('classification', 'forecasting', dll) */
+  uiMode = 'classification';
+  
   /** @type {object} Skema konfigurasi parameter untuk pembuatan form di UI secara dinamis */
   configSchema;
 

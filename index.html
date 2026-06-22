@@ -106,7 +106,7 @@
                 
                 <!-- Kiri: Feature Selector -->
                 <div>
-                  <h3 class="sub-title">Pilih Fitur (Feature Columns)</h3>
+                  <h3 class="sub-title" id="feature-col-title">Pilih Fitur (Feature Columns)</h3>
                   <div class="col-sel-actions">
                     <button class="btn btn-sm" id="btn-select-all-cols">Pilih Semua</button>
                     <button class="btn btn-sm" id="btn-clear-all-cols">Bersihkan</button>
@@ -122,7 +122,7 @@
                   <h3 class="sub-title">Target &amp; Partisi Data</h3>
                   
                   <div class="form-group mb-md">
-                    <label for="class-col-select">Kolom Target / Kelas (ŷ)</label>
+                    <label for="class-col-select" id="target-col-label">Kolom Target / Kelas (ŷ)</label>
                     <select id="class-col-select"></select>
                   </div>
 
@@ -131,6 +131,8 @@
                     <select id="mv-strategy-select">
                       <option value="mode" selected>Imputasi Modus (Kategoris/Numerik)</option>
                       <option value="median">Imputasi Median (Numerik) / Modus</option>
+                      <option value="ffill">Forward Fill (Time Series)</option>
+                      <option value="interpolate">Linear Interpolation (Time Series)</option>
                       <option value="drop">Buang Baris Tidak Lengkap (Drop)</option>
                     </select>
                   </div>
@@ -141,6 +143,7 @@
                       <option value="random" selected>Random Split LCG (Train &amp; Test)</option>
                       <option value="stratified">Stratified Split LCG (Klasifikasi)</option>
                       <option value="linear">Linear Split Sistematis (Regresi)</option>
+                      <option value="time">Time-based Split (Forecasting)</option>
                       <option value="none">Tanpa Split (Gunakan Seluruh Data)</option>
                     </select>
                   </div>
@@ -274,14 +277,22 @@
 <script src="src/core/registry.js"></script>
 <script src="src/core/state_manager.js"></script>
 <script src="src/core/dom_helper.js"></script>
+<!-- Utility Scripts -->
+<script src="src/shared/svg_chart.js"></script>
+<script src="src/shared/metrics.js"></script>
 
-<!-- Algorithm Plugins (Akan register ke registry saat diparse) -->
-<script src="src/plugins/naive_bayes/naive_bayes_plugin.js"></script>
+<!-- Classification & Regression Plugins -->
+<script src="src/plugins/knn/knn_plugin.js"></script>
 <script src="src/plugins/kmeans/kmeans_plugin.js"></script>
 <script src="src/plugins/c45/c45_plugin.js"></script>
-<script src="src/plugins/knn/knn_plugin.js"></script>
-<script src="src/plugins/regression/regression_plugin.js"></script>
+<script src="src/plugins/naive_bayes/naive_bayes_plugin.js"></script>
+<script src="src/plugins/regression/linear_regression_plugin.js"></script>
 <script src="src/plugins/apriori/apriori_plugin.js"></script>
+
+<!-- Forecasting Plugins -->
+<script src="src/plugins/forecasting/sma_plugin.js"></script>
+<script src="src/plugins/forecasting/wma_plugin.js"></script>
+<script src="src/plugins/forecasting/ses_plugin.js"></script>
 
 <!-- Main UI App Controller -->
 <script src="src/core/core_ui.js"></script>

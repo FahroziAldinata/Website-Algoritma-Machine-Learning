@@ -31,6 +31,7 @@ self.onmessage = async function (e) {
     self.importScripts(
       'lcg.js',
       'pipeline.js',
+      'metrics.js',
       '../core/algorithm_interface.js',
       '../core/registry.js'
     );
