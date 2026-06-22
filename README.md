@@ -49,7 +49,7 @@ Setiap algoritma menghasilkan file Excel multi-sheet. Tersedia dua mode:
 
 ### Sheet Dataset
 
-![Sheet Dataset](Images/Sheet1.jpg)
+![Sheet Dataset](Images/Sheet_1.jpg)
 
 Berisi data mentah yang digunakan, diberi label **TRAIN** atau **TEST** per baris, serta informasi metode split.
 
@@ -67,7 +67,7 @@ Tabel seluruh data dengan kolom nilai aktual, nilai prediksi (ŷ), residual, dan
 
 ### Sheet Evaluasi
 
-![Sheet Evaluasi](images/Evaluasi.jpg)
+![Sheet Evaluasi](Images/Evaluasi.jpg)
 
 Metrik evaluasi lengkap (R², MSE, RMSE, MAE, Precision, Recall, F1, Confusion Matrix) untuk training set dan test set secara berdampingan.
 
