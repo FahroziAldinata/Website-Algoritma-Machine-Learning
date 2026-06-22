@@ -15,6 +15,8 @@ class KMeansPlugin extends AlgorithmPlugin {
     this.name = 'K-Means Clustering';
     this.icon = '&#9673;';
     this.description = 'Clustering data numerik berbasis jarak (Euclidean/Manhattan) dengan normalisasi Min-Max dan inisialisasi centroid.';
+    this.uiMode = 'clustering';
+    this.uiCapabilities = { requiresTarget: false };
     
     this.configSchema = {
       k: {
@@ -30,9 +32,16 @@ class KMeansPlugin extends AlgorithmPlugin {
         type: 'select',
         options: [
           { label: 'K Data Pertama (First K)', value: 'first' },
-          { label: 'Acak Deterministik (Random LCG)', value: 'random' }
+          { label: 'Acak Deterministik (Random LCG)', value: 'random' },
+          { label: 'Manual (Baris Spesifik)', value: 'manual' }
         ],
         default: 'first'
+      },
+      manualIndices: {
+        label: 'Nomor Baris Centroid (pisahkan koma)',
+        type: 'text',
+        default: '1,2,3',
+        dependsOn: { field: 'initMethod', value: 'manual' }
       },
       distMetric: {
         label: 'Metrik Jarak',
@@ -267,6 +276,7 @@ class KMeansPlugin extends AlgorithmPlugin {
     const {
       k: K = 3,
       initMethod = 'first',
+      manualIndices = '1,2,3',
       distMetric = 'euclidean',
       maxIter = 10,
       rawRows,
@@ -301,11 +311,29 @@ class KMeansPlugin extends AlgorithmPlugin {
     const log = [];
     const fmtVal = n => parseFloat(n.toFixed(4)).toString();
 
-    if (initMethod === 'first') {
+    if (initMethod === 'manual') {
+      const parts = manualIndices.split(',').map(s => parseInt(s.trim(), 10)).filter(i => !isNaN(i));
+      if (parts.length !== K) {
+         throw new Error(`Jumlah indeks centroid manual (${parts.length}) tidak sama dengan nilai K (${K}).`);
+      }
+      const validParts = parts.filter(i => i >= 1 && i <= n);
+      if (validParts.length !== K) {
+         throw new Error(`Semua indeks centroid manual harus berada dalam rentang 1 hingga ${n}.`);
+      }
+      const uniqueParts = new Set(validParts);
+      if (uniqueParts.size !== K) {
+         throw new Error('Indeks centroid manual tidak boleh ada duplikasi.');
+      }
+      indices = validParts.map(idx => idx - 1); // 1-based ke 0-based
+      log.push(`Metode: Manual`);
+      indices.forEach((idx, ki) => {
+        log.push(`Centroid C${ki + 1} &larr; Baris ${idx + 1}: [${normalizedMatrix[idx].map(fmtVal).join(', ')}]`);
+      });
+    } else if (initMethod === 'first') {
       indices = Array.from({ length: K }, (_, i) => i % n);
       log.push(`Metode: K Data Pertama`);
       indices.forEach((idx, ki) => {
-        log.push(`Centroid C${ki + 1} &larr; Baris ${idx}: [${normalizedMatrix[idx].map(fmtVal).join(', ')}]`);
+        log.push(`Centroid C${ki + 1} &larr; Baris ${idx + 1}: [${normalizedMatrix[idx].map(fmtVal).join(', ')}]`);
       });
     } else {
       // Random LCG shuffle
@@ -314,7 +342,7 @@ class KMeansPlugin extends AlgorithmPlugin {
       indices = shuffled.slice(0, K).sort((a, b) => a - b);
       log.push(`Metode: Random LCG (seed=${seed})`);
       indices.forEach((idx, ki) => {
-        log.push(`Centroid C${ki + 1} &larr; Baris ${idx}: [${normalizedMatrix[idx].map(fmtVal).join(', ')}]`);
+        log.push(`Centroid C${ki + 1} &larr; Baris ${idx + 1}: [${normalizedMatrix[idx].map(fmtVal).join(', ')}]`);
       });
     }
 

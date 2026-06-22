@@ -16,6 +16,8 @@ class AprioriPlugin extends AlgorithmPlugin {
     this.name = 'Apriori Association Rules';
     this.icon = '&#9839;';
     this.description = 'Menemukan frequent itemset dan aturan asosiasi (association rules) berdasarkan support, confidence, dan lift.';
+    this.uiMode = 'association';
+    this.uiCapabilities = { requiresTarget: false };
     
     this.configSchema = {
       minSupport: {

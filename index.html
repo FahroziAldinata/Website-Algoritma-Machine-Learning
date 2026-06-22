@@ -121,7 +121,7 @@
                 <div class="split-panel">
                   <h3 class="sub-title">Target &amp; Partisi Data</h3>
                   
-                  <div class="form-group mb-md">
+                  <div class="form-group mb-md" id="target-col-group">
                     <label for="class-col-select" id="target-col-label">Kolom Target / Kelas (ŷ)</label>
                     <select id="class-col-select"></select>
                   </div>
@@ -242,6 +242,23 @@
   </main>
 </div>
 
+<!-- Confirm Modal for Workspace Reset -->
+<div id="reset-workspace-modal" class="modal" hidden>
+  <div class="modal-content">
+    <h3 style="margin-bottom: 10px;">Pindah Algoritma</h3>
+    <p style="margin-bottom: 20px; color: var(--text2);">Anda memiliki data atau hasil perhitungan di workspace saat ini. Apakah Anda ingin tetap menggunakan dataset ini atau mereset seluruh workspace?</p>
+    <div class="modal-actions" style="display: flex; gap: 10px; justify-content: flex-end;">
+      <button class="btn" style="background: transparent; color: var(--text2); border: 1px solid var(--border);" id="btn-modal-cancel">Batal</button>
+      <button class="btn" style="background: var(--red); color: white; border: none;" id="btn-modal-reset">Reset Workspace</button>
+      <button class="btn" style="background: var(--accent); color: white; border: none;" id="btn-modal-keep">Gunakan Dataset Ini</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- Toast Notification Container -->
+<div id="toast-container"></div>
+
 <!-- FULLSCREEN LOADING OVERLAY -->
 <div class="loading-overlay" id="loading-overlay" role="dialog" aria-modal="true" aria-label="Memproses model">
   <div class="loader-box">
@@ -277,7 +294,8 @@
 <script src="src/core/registry.js"></script>
 <script src="src/core/state_manager.js"></script>
 <script src="src/core/dom_helper.js"></script>
-<!-- Utility Scripts -->
+
+<!-- Utility Scripts -->
 <script src="src/shared/svg_chart.js"></script>
 <script src="src/shared/metrics.js"></script>
 
@@ -286,7 +304,7 @@
 <script src="src/plugins/kmeans/kmeans_plugin.js"></script>
 <script src="src/plugins/c45/c45_plugin.js"></script>
 <script src="src/plugins/naive_bayes/naive_bayes_plugin.js"></script>
-<script src="src/plugins/regression/linear_regression_plugin.js"></script>
+<script src="src/plugins/regression/regression_plugin.js"></script>
 <script src="src/plugins/apriori/apriori_plugin.js"></script>
 
 <!-- Forecasting Plugins -->

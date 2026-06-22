@@ -11,6 +11,30 @@ document.addEventListener('DOMContentLoaded', () => {
   initSPA();
 });
 
+/**
+ * Menampilkan notifikasi toast di sudut kanan atas layar.
+ * @param {string} message - Pesan yang ditampilkan
+ * @param {'info'|'success'|'warn'|'error'} [type='info'] - Varian warna toast
+ * @param {number} [duration=4000] - Durasi tampil dalam ms sebelum hilang
+ */
+function showToast(message, type = 'info', duration = 4000) {
+  const container = document.getElementById('toast-container');
+  if (!container) { console.warn('Toast container tidak ditemukan.'); return; }
+
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  toast.textContent = message;
+
+  container.appendChild(toast);
+
+  // Auto-dismiss
+  setTimeout(() => {
+    toast.classList.add('toast-out');
+    toast.addEventListener('animationend', () => toast.remove(), { once: true });
+  }, duration);
+}
+
+
 function initSPA() {
   // Bind menu navigasi
   bindNavigation();
@@ -170,6 +194,73 @@ function renderHomeCards() {
  * @param {string} viewId - ID algoritma aktif (atau 'home')
  */
 function switchView(viewId) {
+  const currentPluginId = StateManager.state.activePluginId;
+
+  // Jika klik pada algoritma yang sama, jangan lakukan apa-apa
+  if (currentPluginId === viewId) return;
+
+  // Jika pindah ke algoritma lain dan ada data di workspace
+  if (viewId !== 'home' && currentPluginId && StateManager.state.rawRows.length > 0) {
+    const modal = document.getElementById('reset-workspace-modal');
+    if (modal) {
+      modal.hidden = false;
+      
+      // Cleanup previous listeners by cloning
+      const btnCancel = document.getElementById('btn-modal-cancel');
+      const btnReset = document.getElementById('btn-modal-reset');
+      const btnKeep = document.getElementById('btn-modal-keep');
+      
+      const newCancel = btnCancel.cloneNode(true);
+      const newReset = btnReset.cloneNode(true);
+      const newKeep = btnKeep.cloneNode(true);
+      
+      btnCancel.replaceWith(newCancel);
+      btnReset.replaceWith(newReset);
+      btnKeep.replaceWith(newKeep);
+
+      newCancel.addEventListener('click', () => {
+        modal.hidden = true;
+      });
+
+      newReset.addEventListener('click', () => {
+        modal.hidden = true;
+        resetWorkspace();
+        _doSwitchView(viewId);
+      });
+
+      newKeep.addEventListener('click', () => {
+        modal.hidden = true;
+        _doSwitchView(viewId);
+      });
+      
+      return;
+    }
+  }
+
+  // Normal flow
+  _doSwitchView(viewId);
+}
+
+function resetWorkspace() {
+  // Clear file input
+  const fileInput = document.getElementById('dataset-upload');
+  if (fileInput) fileInput.value = '';
+
+  // Clear state
+  StateManager.update('rawRows', []);
+  StateManager.update('headers', []);
+  StateManager.update('featureCols', []);
+  StateManager.update('classCol', '');
+  StateManager.update('lastResult', null);
+
+  // Clear preview and results UI
+  const previewSection = document.getElementById('preview-section');
+  if (previewSection) previewSection.hidden = true;
+  const resultSection = document.getElementById('result-section');
+  if (resultSection) resultSection.hidden = true;
+}
+
+function _doSwitchView(viewId) {
   const homeSection = document.getElementById('home-section');
   const workspaceSection = document.getElementById('workspace-section');
   const resultSection = document.getElementById('result-section');
@@ -203,9 +294,12 @@ function switchView(viewId) {
 
     StateManager.update('activePluginId', viewId);
 
-    // Tampilkan workspace, sembunyikan home & hasil lama
+    // Tampilkan workspace, sembunyikan home & hasil lama (hanya Sembunyikan hasil lama jika ganti mode atau reset)
     if (homeSection) homeSection.hidden = true;
     if (workspaceSection) workspaceSection.hidden = false;
+
+    // Bersihkan hasil kalkulasi lama jika berganti algoritma, walau data dipertahankan
+    StateManager.update('lastResult', null);
     if (resultSection) resultSection.hidden = true;
 
     // Update Header Workspace
@@ -214,14 +308,19 @@ function switchView(viewId) {
     
     // Sesuaikan Label & Control UI berdasarkan mode algoritma
     const featureColTitle = document.getElementById('feature-col-title');
-    const targetColLabel = document.getElementById('target-col-label');
+    const targetColGroup = document.getElementById('target-col-group');
     const splitSliderGroup = document.getElementById('split-slider-group');
     const splitMethodSelect = document.getElementById('split-method-select');
     const mvStrategySelect = document.getElementById('mv-strategy-select');
 
+    // Cek capabilities (Default: assumes target is required)
+    const requiresTarget = plugin.uiCapabilities ? plugin.uiCapabilities.requiresTarget : true;
+    if (targetColGroup) {
+      targetColGroup.style.display = requiresTarget ? 'block' : 'none';
+    }
+
     if (plugin.uiMode === 'forecasting') {
       if (featureColTitle) featureColTitle.textContent = 'Pilih Kolom Tanggal (Waktu)';
-      if (targetColLabel) targetColLabel.textContent = 'Kolom Nilai Aktual (Target)';
       if (splitSliderGroup) splitSliderGroup.style.display = 'none'; // Sembunyikan random split
       if (splitMethodSelect) {
         splitMethodSelect.value = 'time';
@@ -230,13 +329,35 @@ function switchView(viewId) {
       if (mvStrategySelect && (mvStrategySelect.value === 'mode' || mvStrategySelect.value === 'median')) {
          mvStrategySelect.value = 'ffill'; // Default untuk time series
       }
-    } else {
+    } else if (plugin.uiMode === 'association') {
+      if (featureColTitle) featureColTitle.textContent = 'Pilih Kolom Transaksi';
+      if (splitSliderGroup) splitSliderGroup.style.display = 'none';
+      if (splitMethodSelect) {
+        splitMethodSelect.value = 'none';
+        splitMethodSelect.disabled = true;
+      }
+    } else if (plugin.uiMode === 'clustering') {
+      // K-Means mendukung split untuk evaluasi silhouette & DBI
       if (featureColTitle) featureColTitle.textContent = 'Pilih Fitur (Feature Columns)';
-      if (targetColLabel) targetColLabel.textContent = 'Kolom Target / Kelas (ŷ)';
       if (splitSliderGroup) splitSliderGroup.style.display = 'block';
       if (splitMethodSelect) {
         splitMethodSelect.disabled = false;
-        if (splitMethodSelect.value === 'time') splitMethodSelect.value = 'random';
+        if (splitMethodSelect.value === 'time' || splitMethodSelect.value === 'stratified') {
+          splitMethodSelect.value = 'random';
+        }
+      }
+      if (mvStrategySelect && (mvStrategySelect.value === 'ffill' || mvStrategySelect.value === 'interpolate')) {
+         mvStrategySelect.value = 'mode';
+      }
+    } else {
+      // classification, regression
+      if (featureColTitle) featureColTitle.textContent = 'Pilih Fitur (Feature Columns)';
+      if (splitSliderGroup) splitSliderGroup.style.display = 'block';
+      if (splitMethodSelect) {
+        splitMethodSelect.disabled = false;
+        if (splitMethodSelect.value === 'time' || splitMethodSelect.value === 'none') {
+           splitMethodSelect.value = 'random';
+        }
       }
       if (mvStrategySelect && (mvStrategySelect.value === 'ffill' || mvStrategySelect.value === 'interpolate')) {
          mvStrategySelect.value = 'mode';
@@ -304,7 +425,7 @@ function renderDynamicForm(schema) {
       
       // Jika ada child dependency (misal Minkowski p hanya muncul saat jarak Minkowski dipilih)
       inputEl.addEventListener('change', () => {
-        handleDependencyTrigger();
+        handleDependencyTrigger(schema);
       });
     } else if (field.type === 'number') {
       inputEl = document.createElement('input');
@@ -337,13 +458,30 @@ function renderDynamicForm(schema) {
   container.appendChild(grid);
   
   // Trigger trigger dependency agar input yang tidak relevan tersembunyi sejak awal
-  handleDependencyTrigger();
+  handleDependencyTrigger(schema);
 }
 
 /**
- * Menyembunyikan atau menampilkan parameter berdasarkan pilihan dropdown (e.g. Minkowski p)
+ * Menyembunyikan atau menampilkan parameter berdasarkan properti dependsOn di skema
  */
-function handleDependencyTrigger() {
+function handleDependencyTrigger(schema) {
+  if (!schema) return;
+  
+  Object.entries(schema).forEach(([key, field]) => {
+    if (field.dependsOn) {
+      const parentEl = document.getElementById(`cfg-${field.dependsOn.field}`);
+      const childGroup = document.getElementById(`cfg-${key}`)?.closest('.form-group');
+      if (parentEl && childGroup) {
+        if (parentEl.value === field.dependsOn.value) {
+          childGroup.style.display = 'block';
+        } else {
+          childGroup.style.display = 'none';
+        }
+      }
+    }
+  });
+
+  // Backward compatibility for Minkowski p (KNN)
   const metricSelect = document.getElementById('cfg-metric');
   const pGroup = document.getElementById('cfg-p')?.closest('.form-group');
   
@@ -445,7 +583,7 @@ function handleCSVFile(file) {
       updateValidationWarnings();
 
     } catch (err) {
-      alert(`Gagal memuat CSV: ${err.message}`);
+      showToast(`Gagal memuat CSV: ${err.message}`, 'error');
     }
   };
   reader.readAsText(file);
@@ -514,15 +652,24 @@ function renderColumnSelector() {
   const classCol = StateManager.state.classCol;
   const featureCols = StateManager.state.featureCols;
 
-  // Update label hint kelas
+  // Cek apakah plugin aktif membutuhkan target
+  const activePluginId = StateManager.state.activePluginId;
+  const activePlugin = activePluginId ? registry.get(activePluginId) : null;
+  const requiresTarget = activePlugin?.uiCapabilities
+    ? activePlugin.uiCapabilities.requiresTarget
+    : true;
+
+  // Update label hint kelas (hanya tampil jika ada target)
   const labelHint = document.getElementById('class-col-label-hint');
-  if (labelHint) labelHint.textContent = classCol;
+  if (labelHint) labelHint.textContent = requiresTarget ? classCol : '';
 
   headers.forEach(h => {
-    if (h === classCol) {
+    // Jika kolom ini adalah kolom target DAN algoritma memerlukan target,
+    // tampilkan sebagai pill kelas (non-checkable)
+    if (h === classCol && requiresTarget) {
       const pill = document.createElement('label');
       pill.className = 'col-pill is-class';
-      pill.innerHTML = `<span class="pill-icon">&#9650;</span> ${escapeHTML(h)} <span class="pill-type">kelas</span>`;
+      pill.innerHTML = `<span class="pill-icon">&#9650;</span> ${escapeHTML(h)} <span class="pill-type">target</span>`;
       container.appendChild(pill);
       return;
     }
@@ -684,13 +831,13 @@ function updateValidationWarnings() {
   }
 
   // Validasi khusus algoritma
-  if (activePluginId === 'knn' || activePluginId === 'regression') {
-    // K-NN & Regresi membutuhkan fitur numerik
+  if (activePluginId === 'knn' || activePluginId === 'regression' || activePluginId === 'kmeans') {
+    // K-NN, Regresi, & K-Means membutuhkan fitur numerik
     const hasNumeric = featureCols.some(c => 
       rawRows.every(r => r[c] === '' || r[c] == null || !isNaN(parseFloat(r[c])))
     );
     if (!hasNumeric) {
-      warnDiv.innerHTML = `<div class="warn-box">&#9888; Algoritma [${activePluginId === 'knn' ? 'KNN' : 'Linear Regression'}] membutuhkan setidaknya 1 kolom fitur bernilai numerik murni.</div>`;
+      warnDiv.innerHTML = `<div class="warn-box">&#9888; Algoritma ini membutuhkan setidaknya 1 kolom fitur bernilai numerik murni.</div>`;
     }
   }
 }
@@ -701,12 +848,12 @@ function updateValidationWarnings() {
 function runActiveModel() {
   const state = StateManager.state;
   if (state.rawRows.length === 0) {
-    alert('Upload dataset CSV terlebih dahulu.');
+    showToast('Upload dataset CSV terlebih dahulu.', 'warn');
     return;
   }
 
   if (state.featureCols.length === 0) {
-    alert('Pilih setidaknya 1 kolom fitur.');
+    showToast('Pilih setidaknya 1 kolom fitur.', 'warn');
     return;
   }
 
@@ -809,7 +956,7 @@ function runActiveModel() {
 
   } catch (err) {
     showLoading(false);
-    alert(`Kesalahan inisialisasi: ${err.message}`);
+    showToast(`Kesalahan inisialisasi: ${err.message}`, 'error');
   }
 }
 
@@ -832,7 +979,7 @@ function handleWorkerMessage(msg, plugin) {
     case 'ERROR':
       showLoading(false);
       StateManager.update('isCalculating', false);
-      alert(`Perhitungan gagal: ${msg.message}`);
+      showToast(`Perhitungan gagal: ${msg.message}`, 'error');
       break;
   }
 }
@@ -909,7 +1056,7 @@ function renderCalculationResult(plugin, result) {
 function triggerExport(mode) {
   const state = StateManager.state;
   if (!state.lastResult) {
-    alert('Jalankan kalkulasi model terlebih dahulu sebelum mengekspor.');
+    showToast('Jalankan kalkulasi model terlebih dahulu sebelum mengekspor.', 'warn');
     return;
   }
 
@@ -923,7 +1070,7 @@ function triggerExport(mode) {
     const filename = `${plugin.id.toUpperCase()}_Calculator_${mode === 'formula' ? 'Formula' : 'Plain'}.xlsx`;
     saveWB(WB, filename);
   } catch (err) {
-    alert(`Gagal mengekspor berkas Excel: ${err.message}`);
+    showToast(`Gagal mengekspor berkas Excel: ${err.message}`, 'error');
   }
 }
 
@@ -962,14 +1109,25 @@ function _reAutoSelectColumns(plugin) {
   const { headers, rawRows } = StateManager.state;
   if (!headers || headers.length === 0) return;
 
+  const requiresTarget = plugin.uiCapabilities
+    ? plugin.uiCapabilities.requiresTarget
+    : true;
+
   if (plugin.uiMode === 'forecasting') {
     const dateCol = _detectDateColumn(headers, rawRows);
     const numericCols = headers.filter(h => h !== dateCol && rawRows.slice(0, 10).every(r => !isNaN(parseFloat(r[h])) && r[h] !== ''));
     const defaultTarget = numericCols[0] || headers.find(h => h !== dateCol) || headers[headers.length - 1];
     StateManager.update('classCol', defaultTarget || '');
     StateManager.update('featureCols', dateCol ? [dateCol] : []);
+
+  } else if (!requiresTarget) {
+    // Association (Apriori) atau Clustering (K-Means) — tidak ada target/kelas
+    // Kosongkan classCol dan jadikan semua kolom sebagai fitur potensial
+    StateManager.update('classCol', '');
+    StateManager.update('featureCols', [...headers]);
+
   } else {
-    // Reset ke perilaku default classification/regression
+    // Classification / Regression — default ke kolom terakhir sebagai target
     const defaultClass = headers[headers.length - 1];
     StateManager.update('classCol', defaultClass);
     StateManager.update('featureCols', headers.filter(h => h !== defaultClass));
