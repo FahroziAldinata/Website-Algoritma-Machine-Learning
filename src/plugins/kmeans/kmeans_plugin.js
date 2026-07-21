@@ -832,8 +832,7 @@ class KMeansPlugin extends AlgorithmPlugin {
     const WB = newWB();
 
     // 1. Sheet Dataset
-    const s1 = [];
-    s1.push(['No', ...r.featureNames.map(f => `${f} (Asli)`), ...r.featureNames.map(f => `${f} (Norm)`)');
+    const s1 = [['No', ...r.featureNames.map(f => `${f} (Asli)`), ...r.featureNames.map(f => `${f} (Norm)`)]];
 
     r.rawRows.forEach((row, ri) => {
       const excelRow = S1_ROW_DATA + ri;
