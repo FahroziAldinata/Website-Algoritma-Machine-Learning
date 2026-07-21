@@ -14,7 +14,7 @@ class KMeansPlugin extends AlgorithmPlugin {
     this.id = 'kmeans';
     this.name = 'K-Means Clustering';
     this.icon = '&#9673;';
-    this.description = 'Clustering data numerik berbasis jarak (Euclidean/Manhattan) dengan normalisasi Min-Max dan inisialisasi centroid.';
+    this.description = 'Clustering data numerik berbasis jarak (Euclidean/Manhattan) dengan opsi normalisasi (Min-Max / Z-Score / None) dan inisialisasi centroid.';
     this.uiMode = 'clustering';
     this.uiCapabilities = { requiresTarget: false };
     
@@ -59,6 +59,16 @@ class KMeansPlugin extends AlgorithmPlugin {
         max: 100,
         step: 1,
         default: 10
+      },
+      normMethod: {
+        label: 'Normalisasi Data',
+        type: 'select',
+        options: [
+          { label: 'MinMaxScaler (skala [0,1])', value: 'minmax' },
+          { label: 'StandardScaler (Z-Score)', value: 'standard' },
+          { label: 'Tanpa Normalisasi', value: 'none' }
+        ],
+        default: 'minmax'
       }
     };
   }
@@ -279,6 +289,7 @@ class KMeansPlugin extends AlgorithmPlugin {
       manualIndices = '1,2,3',
       distMetric = 'euclidean',
       maxIter = 10,
+      normMethod = 'minmax',
       rawRows,
       classCol,
       featureCols,
@@ -289,21 +300,34 @@ class KMeansPlugin extends AlgorithmPlugin {
     const featureNames = featureCols;
     const nCols = featureNames.length;
 
-    onProgress('Preprocessing', 'Melakukan normalisasi Min-Max data...', 15);
     // Ekstraksi nilai fitur asli (matrix data numerik)
     const cleanMatrix = rawRows.map(r => featureNames.map(f => parseFloat(r[f]) || 0));
 
-    // Normalisasi Min-Max per kolom
+    // Normalisasi data sesuai pilihan pengguna
+    onProgress('Preprocessing', `Melakukan normalisasi data (${normMethod})...`, 15);
+    const normMethods = {
+      minmax: 'MinMaxScaler [0,1]',
+      standard: 'StandardScaler (Z-Score)',
+      none: 'Tanpa Normalisasi'
+    };
+
+    let scaler = null;
+    let normalizedMatrix;
+    let normDescription;
+
+    if (normMethod === 'none') {
+      normalizedMatrix = cleanMatrix.map(r => [...r]);
+      scaler = null;
+      normDescription = 'Tanpa Normalisasi';
+    } else {
+      scaler = createScaler(normMethod);
+      normalizedMatrix = scaler.fitTransform(cleanMatrix);
+      normDescription = normMethods[normMethod] || normMethod;
+    }
+
+    // Parameter untuk backward compatibility (ekspor Excel)
     const colMins = featureNames.map((_, fi) => Math.min(...cleanMatrix.map(r => r[fi])));
     const colMaxs = featureNames.map((_, fi) => Math.max(...cleanMatrix.map(r => r[fi])));
-
-    const normalizedMatrix = cleanMatrix.map(row => 
-      row.map((v, fi) => {
-        const min = colMins[fi];
-        const max = colMaxs[fi];
-        return max === min ? 0 : (v - min) / (max - min);
-      })
-    );
 
     onProgress('Inisialisasi', 'Memilih centroid awal...', 30);
     // Inisialisasi centroid awal dari normalizedMatrix
@@ -401,6 +425,9 @@ class KMeansPlugin extends AlgorithmPlugin {
       K,
       distMetric,
       initMethod,
+      normMethod,
+      normDescription,
+      scalerParams: scaler ? scaler.getParams() : null,
       initLog: log,
       initIndices: indices,
       initCentroids,
@@ -462,6 +489,7 @@ class KMeansPlugin extends AlgorithmPlugin {
         <div class="metric-card"><div class="metric-label">Iterasi</div><div class="metric-val metric-blue" style="font-size:32px">${r.totalIter}</div></div>
         <div class="metric-card"><div class="metric-label">SSE / Inertia</div><div class="metric-val metric-green" style="font-size:24px">${fmtShort(r.sse)}</div></div>
         <div class="metric-card"><div class="metric-label">Davies-Bouldin</div><div class="metric-val metric-blue" style="font-size:24px">${fmt(r.dbIndex)}</div></div>
+        <div class="metric-card"><div class="metric-label">Normalisasi</div><div class="metric-val" style="font-size:16px">${escapeHTML(r.normDescription || 'MinMaxScaler [0,1]')}</div></div>
       </div>
 
       <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1rem;margin-bottom:1.5rem;">
@@ -591,7 +619,7 @@ class KMeansPlugin extends AlgorithmPlugin {
 
     html += `
       <div class="section">
-        <div class="section-head"><div class="step-circle">1</div><div class="section-title">Inisialisasi Centroid Awal (Data Ternormalisasi)</div></div>
+        <div class="section-head"><div class="step-circle">1</div><div class="section-title">Inisialisasi Centroid Awal (${escapeHTML(r.normDescription || 'MinMaxScaler [0,1]')})</div></div>
         <div class="section-body">
           <div class="tbl-wrap-scroll">
             <table>
@@ -792,10 +820,12 @@ class KMeansPlugin extends AlgorithmPlugin {
     const nF = r.featureNames.length;
     const isEuc = r.distMetric !== 'manhattan';
 
+    const normMethod = r.normMethod || 'minmax';
+
     const S1_ROW_DATA = 2;
     const S1_ROW_END = S1_ROW_DATA + nData - 1;
-    const S1_ROW_MIN = S1_ROW_END + 2;
-    const S1_ROW_MAX = S1_ROW_MIN + 1;
+    const S1_ROW_PARAM1 = S1_ROW_END + 2; // Min or Mean row
+    const S1_ROW_PARAM2 = S1_ROW_PARAM1 + 1; // Max or Std row
     const S1_COL_RAW = 1;
     const S1_COL_NORM = 1 + nF;
 
@@ -803,17 +833,22 @@ class KMeansPlugin extends AlgorithmPlugin {
 
     // 1. Sheet Dataset
     const s1 = [];
-    s1.push(['No', ...r.featureNames.map(f => `${f} (Asli)`), ...r.featureNames.map(f => `${f} (Norm)`)]);
+    s1.push(['No', ...r.featureNames.map(f => `${f} (Asli)`), ...r.featureNames.map(f => `${f} (Norm)`)');
 
     r.rawRows.forEach((row, ri) => {
       const excelRow = S1_ROW_DATA + ri;
       const rawVals = r.featureNames.map(f => parseFloat(row[f]) || 0);
       const normVals = r.featureNames.map((feat, fi) => {
-        if (fm) {
+        if (fm && normMethod === 'minmax') {
           const rawCol = col2l(S1_COL_RAW + fi);
-          const minCell = `$${rawCol}$${S1_ROW_MIN}`;
-          const maxCell = `$${rawCol}$${S1_ROW_MAX}`;
+          const minCell = `$${rawCol}$${S1_ROW_PARAM1}`;
+          const maxCell = `$${rawCol}$${S1_ROW_PARAM2}`;
           return fc(`IF(${maxCell}-${minCell}=0,0,(${rawCol}${excelRow}-${minCell})/(${maxCell}-${minCell}))`);
+        } else if (fm && normMethod === 'standard') {
+          const rawCol = col2l(S1_COL_RAW + fi);
+          const meanCell = `$${rawCol}$${S1_ROW_PARAM1}`;
+          const stdCell = `$${rawCol}$${S1_ROW_PARAM2}`;
+          return fc(`IF(${stdCell}=0,0,(${rawCol}${excelRow}-${meanCell})/${stdCell})`);
         } else {
           return nc(r.data[ri][fi]);
         }
@@ -822,30 +857,58 @@ class KMeansPlugin extends AlgorithmPlugin {
     });
 
     s1.push([]);
-    // Row Min
-    s1.push([
-      'Min',
-      ...r.featureNames.map((_, fi) => {
-        if (fm) {
-          const c = col2l(S1_COL_RAW + fi);
-          return fc(`MIN(${c}${S1_ROW_DATA}:${c}${S1_ROW_END})`);
-        }
-        return nc(r.colMins[fi]);
-      }),
-      ...r.featureNames.map(() => 0)
-    ]);
-    // Row Max
-    s1.push([
-      'Max',
-      ...r.featureNames.map((_, fi) => {
-        if (fm) {
-          const c = col2l(S1_COL_RAW + fi);
-          return fc(`MAX(${c}${S1_ROW_DATA}:${c}${S1_ROW_END})`);
-        }
-        return nc(r.colMaxs[fi]);
-      }),
-      ...r.featureNames.map(() => 1)
-    ]);
+    if (normMethod === 'standard') {
+      // Row Mean
+      s1.push([
+        'Mean',
+        ...r.featureNames.map((_, fi) => {
+          if (fm) {
+            const c = col2l(S1_COL_RAW + fi);
+            return fc(`AVERAGE(${c}${S1_ROW_DATA}:${c}${S1_ROW_END})`);
+          }
+          return nc(r.scalerParams ? r.scalerParams.means[fi] : 0);
+        }),
+        ...r.featureNames.map(() => 0)
+      ]);
+      // Row Std Dev
+      s1.push([
+        'Std Dev',
+        ...r.featureNames.map((_, fi) => {
+          if (fm) {
+            const c = col2l(S1_COL_RAW + fi);
+            const meanCell = `$${c}$${S1_ROW_PARAM1}`;
+            return fc(`SQRT(AVERAGE((${c}${S1_ROW_DATA}:${c}${S1_ROW_END}-${meanCell})^2))`);
+          }
+          return nc(r.scalerParams ? r.scalerParams.stds[fi] : 1);
+        }),
+        ...r.featureNames.map(() => 1)
+      ]);
+    } else {
+      // Row Min (for minmax or none)
+      s1.push([
+        'Min',
+        ...r.featureNames.map((_, fi) => {
+          if (fm) {
+            const c = col2l(S1_COL_RAW + fi);
+            return fc(`MIN(${c}${S1_ROW_DATA}:${c}${S1_ROW_END})`);
+          }
+          return nc(r.colMins[fi]);
+        }),
+        ...r.featureNames.map(() => 0)
+      ]);
+      // Row Max
+      s1.push([
+        'Max',
+        ...r.featureNames.map((_, fi) => {
+          if (fm) {
+            const c = col2l(S1_COL_RAW + fi);
+            return fc(`MAX(${c}${S1_ROW_DATA}:${c}${S1_ROW_END})`);
+          }
+          return nc(r.colMaxs[fi]);
+        }),
+        ...r.featureNames.map(() => 1)
+      ]);
+    }
 
     const ws1 = aoaToWS(s1);
     addWS(WB, ws1, 'Dataset');
